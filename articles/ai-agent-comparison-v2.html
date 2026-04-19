@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 智能体五强横评 v2.0 · 2026年4月迭代版</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2234;
+    --border: #1e2d45;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+    --tencent: #1677ff;
+    --ali: #ff6a00;
+    --bytedance: #2cc7b2;
+    --yuanqi: #ff3e6c;
+    --huawei: #c8001a;
+    --gold: #f59e0b;
+    --green: #10b981;
+    --red: #ef4444;
+    --purple: #8b5cf6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    line-height: 1.6;
+  }
+
+  /* ─── Hero ─── */
+  .hero {
+    background: linear-gradient(135deg, #0d1b2e 0%, #0a1628 50%, #0d1b2e 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 56px 24px 44px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(22,119,255,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-badges {
+    display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 18px;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(246,160,30,0.12);
+    border: 1px solid rgba(246,160,30,0.4);
+    color: var(--gold);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    padding: 3px 12px;
+    border-radius: 20px;
+    text-transform: uppercase;
+  }
+  .hero-badge.new {
+    background: rgba(16,185,129,0.15);
+    border-color: rgba(16,185,129,0.4);
+    color: var(--green);
+  }
+  .hero h1 {
+    font-size: clamp(26px, 5vw, 48px);
+    font-weight: 800;
+    background: linear-gradient(135deg, #e2e8f0 30%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 14px;
+    letter-spacing: -0.5px;
+  }
+  .hero-sub {
+    font-size: 15px;
+    color: var(--text-muted);
+    max-width: 620px;
+    margin: 0 auto 28px;
+  }
+  .hero-v {
+    display: inline-flex; gap: 24px; justify-content: center; flex-wrap: wrap;
+  }
+  .hero-v span {
+    font-size: 13px; color: var(--text-dim);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .hero-v span::before { content: '●'; font-size: 6px; }
+
+  /* ─── Layout ─── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 48px 24px; }
+  section { margin-bottom: 60px; }
+  .section-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::before {
+    content: '';
+    display: block;
+    width: 4px;
+    height: 20px;
+    background: linear-gradient(180deg, var(--tencent), var(--purple));
+    border-radius: 2px;
+  }
+  .section-desc { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
+
+  /* ─── Timeline ─── */
+  .timeline-section { margin-bottom: 48px; }
+  .timeline {
+    position: relative;
+    padding-left: 28px;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px; top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, var(--tencent), var(--huawei));
+    opacity: 0.3;
+  }
+  .timeline-item {
+    position: relative;
+    margin-bottom: 24px;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -24px; top: 6px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--tencent);
+    background: var(--bg);
+  }
+  .timeline-item.ali::before { border-color: var(--ali); }
+  .timeline-item.bytedance::before { border-color: var(--bytedance); }
+  .timeline-item.yuanqi::before { border-color: var(--yuanqi); }
+  .timeline-item.huawei::before { border-color: var(--huawei); }
+
+  .timeline-date {
+    font-size: 11px;
+    color: var(--gold);
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .timeline-brand {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .timeline-brand span { font-size: 11px; font-weight: 400; color: var(--text-dim); margin-left: 6px; }
+  .timeline-content {
+    font-size: 13px;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    line-height: 1.8;
+  }
+  .timeline-content strong { color: var(--text); }
+  .new-tag {
+    display: inline-block;
+    background: rgba(16,185,129,0.15);
+    color: var(--green);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  /* ─── Product Cards ─── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(205px, 1fr));
+    gap: 14px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 18px;
+    transition: transform .2s, border-color .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .card:hover { transform: translateY(-2px); }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 14px 14px 0 0;
+  }
+  .card.tencent { border-color: rgba(22,119,255,0.3); }
+  .card.tencent::before { background: linear-gradient(90deg, var(--tencent), #60a5fa); }
+  .card.ali { border-color: rgba(255,106,0,0.3); }
+  .card.ali::before { background: linear-gradient(90deg, var(--ali), #fbbf24); }
+  .card.bytedance { border-color: rgba(44,199,178,0.3); }
+  .card.bytedance::before { background: linear-gradient(90deg, var(--bytedance), #34d399); }
+  .card.yuanqi { border-color: rgba(255,62,108,0.3); }
+  .card.yuanqi::before { background: linear-gradient(90deg, var(--yuanqi), #f97316); }
+  .card.huawei { border-color: rgba(200,0,26,0.3); }
+  .card.huawei::before { background: linear-gradient(90deg, var(--huawei), #f97316); }
+
+  .card-version {
+    position: absolute;
+    top: 12px; right: 12px;
+    font-size: 10px;
+    color: var(--text-dim);
+    background: rgba(255,255,255,0.05);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .card-logo {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 900;
+    margin-bottom: 12px;
+  }
+  .card.tencent .card-logo { background: rgba(22,119,255,0.12); }
+  .card.ali .card-logo { background: rgba(255,106,0,0.12); }
+  .card.bytedance .card-logo { background: rgba(44,199,178,0.12); }
+  .card.yuanqi .card-logo { background: rgba(255,62,108,0.12); }
+  .card.huawei .card-logo { background: rgba(200,0,26,0.12); }
+  .card-name { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+  .card-maker { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
+  .card-desc { font-size: 12px; color: var(--text-muted); line-height: 1.65; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
+  .tag {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+  .tag-blue { background: rgba(22,119,255,.12); color: #60a5fa; }
+  .tag-orange { background: rgba(255,106,0,.12); color: #fb923c; }
+  .tag-teal { background: rgba(44,199,178,.12); color: #34d399; }
+  .tag-pink { background: rgba(255,62,108,.12); color: #fb7185; }
+  .tag-red { background: rgba(200,0,26,.12); color: #f87171; }
+  .tag-purple { background: rgba(139,92,246,.12); color: #a78bfa; }
+  .tag-green { background: rgba(16,185,129,.12); color: #34d399; }
+  .tag-gold { background: rgba(246,160,30,.12); color: #fbbf24; }
+
+  /* ─── Comparison Table ─── */
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    font-size: 13px;
+    min-width: 760px;
+  }
+  thead tr { background: var(--surface2); border-bottom: 1px solid var(--border); }
+  th {
+    padding: 12px 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-align: left;
+    white-space: nowrap;
+  }
+  th.center, td.center { text-align: center; }
+  td {
+    padding: 11px 14px;
+    border-bottom: 1px solid rgba(30,45,69,0.5);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .prod-name { font-weight: 700; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ─── Changelog Section ─── */
+  .changelog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 14px;
+  }
+  .changelog-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .changelog-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .changelog-header .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .changelog-header .name { font-weight: 700; font-size: 14px; }
+  .changelog-header .version {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-dim);
+    background: rgba(255,255,255,0.05);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .changelog-body { padding: 14px 18px; }
+  .changelog-type {
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .changelog-type.new { color: var(--green); }
+  .changelog-type.fix { color: var(--gold); }
+  .changelog-type.opt { color: var(--purple); }
+  .changelog-list { list-style: none; }
+  .changelog-list li {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    display: flex; align-items: flex-start; gap: 6px;
+  }
+  .changelog-list li:last-child { border-bottom: none; }
+  .changelog-list li::before {
+    content: '•';
+    color: var(--text-dim);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ─── Score ─── */
+  .score-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+    gap: 12px;
+  }
+  .score-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+  }
+  .score-header {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 14px;
+  }
+  .score-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .score-name { font-weight: 700; font-size: 14px; }
+  .score-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .score-label { font-size: 11px; color: var(--text-dim); width: 58px; flex-shrink: 0; }
+  .score-bar-bg { flex: 1; height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+  .score-bar { height: 100%; border-radius: 3px; }
+  .score-val { font-size: 11px; font-weight: 600; width: 22px; text-align: right; }
+
+  /* ─── Pricing ─── */
+  .price-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+    gap: 12px;
+  }
+  .price-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+  }
+  .price-brand { font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
+  .price-product { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+  .price-main { font-size: 26px; font-weight: 800; line-height: 1; margin-bottom: 3px; }
+  .price-unit { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; }
+  .price-free {
+    font-size: 13px; color: var(--green); font-weight: 600;
+    padding: 3px 10px; background: rgba(16,185,129,.1);
+    border-radius: 20px; display: inline-block;
+  }
+  .price-items { text-align: left; margin-top: 10px; list-style: none; }
+  .price-items li {
+    font-size: 11px; color: var(--text-muted);
+    padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    display: flex; justify-content: space-between;
+  }
+  .price-items li:last-child { border-bottom: none; }
+  .price-note { font-size: 11px; color: var(--text-muted); margin-top: 8px; }
+
+  /* ─── Verdict ─── */
+  .verdict-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 12px;
+  }
+  .verdict-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .verdict-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .verdict-card.tencent::after { background: var(--tencent); }
+  .verdict-card.ali::after { background: var(--ali); }
+  .verdict-card.bytedance::after { background: var(--bytedance); }
+  .verdict-card.yuanqi::after { background: var(--yuanqi); }
+  .verdict-card.huawei::after { background: var(--huawei); }
+  .verdict-for { font-size: 10px; letter-spacing: 1px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; }
+  .verdict-name { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+  .verdict-best {
+    font-size: 11px; font-weight: 600; padding: 3px 9px;
+    border-radius: 6px; display: inline-block; margin-bottom: 10px;
+  }
+  .verdict-desc { font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+
+  /* ─── Diff ─── */
+  .diff-section { margin-top: 12px; }
+  .diff-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 14px;
+  }
+  .diff-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .diff-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .diff-header .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .diff-header .name { font-weight: 700; font-size: 13px; }
+  .diff-body { padding: 14px 16px; }
+  .diff-item {
+    display: flex; gap: 10px; margin-bottom: 12px;
+    font-size: 12px;
+  }
+  .diff-item:last-child { margin-bottom: 0; }
+  .diff-icon {
+    width: 20px; height: 20px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; flex-shrink: 0;
+  }
+  .diff-icon.up { background: rgba(16,185,129,0.15); color: var(--green); }
+  .diff-icon.down { background: rgba(239,68,68,0.15); color: var(--red); }
+  .diff-icon.neutral { background: rgba(139,92,246,0.15); color: var(--purple); }
+  .diff-text { color: var(--text-muted); line-height: 1.6; }
+  .diff-text strong { color: var(--text); }
+  .diff-label { font-size: 10px; padding: 1px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+  .diff-label.add { background: rgba(16,185,129,0.15); color: var(--green); }
+  .diff-label.remove { background: rgba(239,68,68,0.15); color: var(--red); }
+  .diff-label.new { background: rgba(246,160,30,0.15); color: var(--gold); }
+
+  /* ─── Footer ─── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 28px 24px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+  footer p { margin-bottom: 4px; }
+
+  /* ─── Utility ─── */
+  .check { color: var(--green); }
+  .cross { color: var(--red); }
+  .partial { color: var(--gold); font-size: 12px; }
+  .section-badge {
+    display: inline-block;
+    background: rgba(16,185,129,0.15);
+    border: 1px solid rgba(16,185,129,0.3);
+    color: var(--green);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-badges">
+    <span class="hero-badge">2026 · v2.0 迭代版</span>
+    <span class="hero-badge new">+ 新增4月迭代追踪</span>
+  </div>
+  <h1>AI 智能体五强全面对比</h1>
+  <p class="hero-sub">
+    WorkBuddy · QoderWork · ArkClaw · 元气AI Bot · 小艺Claw<br>
+    <span style="font-size:13px">基于2026年4月最新迭代数据，追踪各产品版本演进与功能变化</span>
+  </p>
+  <div class="hero-v">
+    <span>v1.0 发布：2026年4月14日</span>
+    <span>v2.0 更新：2026年4月18日</span>
+    <span>数据来源：官方更新日志</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- 版本迭代时间线 -->
+  <section class="timeline-section">
+    <div class="section-title">版本迭代时间线</div>
+    <p class="section-desc">追踪各产品4月份重大更新节点</p>
+    <div class="timeline">
+
+      <div class="timeline-item tencent">
+        <div class="timeline-date">2026-04-17</div>
+        <div class="timeline-brand" style="color:#1677ff">WorkBuddy <span>腾讯云</span></div>
+        <div class="timeline-content">
+          <strong>医疗垂类Skill首发</strong><span class="new-tag">新</span>：携手中康科技上线医疗健康垂类Skill，封装健康管理、临床科研等专业能力。<br>
+          <strong>GLM-5.1全系内置</strong><span class="new-tag">新</span>：WorkBuddy/CodingBuddy全系产品内置GLM-5.1，支持复杂系统设计场景。
+        </div>
+      </div>
+
+      <div class="timeline-item huawei">
+        <div class="timeline-date">2026-04-09</div>
+        <div class="timeline-brand" style="color:#c8001a">小艺Claw <span>华为</span></div>
+        <div class="timeline-content">
+          <strong>11.6.2.931尝鲜版</strong><span class="new-tag">新</span>：「小艺Claw先锋版」正式上线鸿蒙6.0+设备，新增付费套餐（体验包49元/标准包199元）。<br>
+          <strong>国家级安全认证</strong><span class="new-tag">新</span>：通过中国信通院Claw类智能体安全专项评测，成为国内首个获此认证的产品。
+        </div>
+      </div>
+
+      <div class="timeline-item tencent">
+        <div class="timeline-date">2026-04-08</div>
+        <div class="timeline-brand" style="color:#1677ff">WorkBuddy <span>腾讯云</span></div>
+        <div class="timeline-content">
+          <strong>GLM-5.1上线</strong>：Buddy全系产品内置GLM-5.1，辅助处理代码开发、长程智能任务、复杂系统设计。
+        </div>
+      </div>
+
+      <div class="timeline-item tencent">
+        <div class="timeline-date">2026-04-02</div>
+        <div class="timeline-brand" style="color:#1677ff">WorkBuddy <span>腾讯云</span></div>
+        <div class="timeline-content">
+          <strong>4.10.0版本</strong><span class="new-tag">新</span>：优化左侧导航栏、Widget卡片加载、Skill市场功能，修复30+项Bug。
+        </div>
+      </div>
+
+      <div class="timeline-item tencent">
+        <div class="timeline-date">2026-03-31</div>
+        <div class="timeline-brand" style="color:#1677ff">WorkBuddy <span>腾讯云</span></div>
+        <div class="timeline-content">
+          <strong>微信小程序上线</strong><span class="new-tag">新</span>：支持云端沙箱+本地双模式，语音/拍照/传文件直接派活，2.2万Skill支持。
+        </div>
+      </div>
+
+      <div class="timeline-item huawei">
+        <div class="timeline-date">2026-03-31</div>
+        <div class="timeline-brand" style="color:#c8001a">小艺Claw <span>华为</span></div>
+        <div class="timeline-content">
+          <strong>众测开启</strong>：正式开启小艺Claw众测（3.31-4.7），小艺App更新至11.6.2.195即可申请参与。
+        </div>
+      </div>
+
+      <div class="timeline-item ali">
+        <div class="timeline-date">2026-03-04</div>
+        <div class="timeline-brand" style="color:#ff6a00">QoderWork <span>阿里巴巴</span></div>
+        <div class="timeline-content">
+          <strong>Windows版上线</strong><span class="new-tag">新</span>：QoderWork正式推出Windows版本，同步升级：模型分级系统（标准/旗舰）、预制安全沙盒环境、快捷键自定义。
+        </div>
+      </div>
+
+      <div class="timeline-item bytedance">
+        <div class="timeline-date">2026-03-31</div>
+        <div class="timeline-brand" style="color:#2cc7b2">ArkClaw <span>字节跳动</span></div>
+        <div class="timeline-content">
+          <strong>飞书插件v2026.3.31</strong>：飞书官方插件重大更新，支持多渠道配置。
+        </div>
+      </div>
+
+      <div class="timeline-item yuanqi">
+        <div class="timeline-date">2026-02-27</div>
+        <div class="timeline-brand" style="color:#ff3e6c">元气AI Bot <span>猎豹移动</span></div>
+        <div class="timeline-content">
+          <strong>图片批量处理</strong><span class="new-tag">新</span>：一键处理成百上千张图片，适配各类平台上传；远程打印功能上线。
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 产品当前状态 -->
+  <section>
+    <div class="section-title">产品当前版本状态</div>
+    <p class="section-desc">各产品最新版本及核心亮点（截至2026年4月18日）</p>
+    <div class="cards-grid">
+
+      <div class="card tencent">
+        <div class="card-version">v4.10.0</div>
+        <div class="card-logo">🦀</div>
+        <div class="card-name">WorkBuddy</div>
+        <div class="card-maker">腾讯云 CodeBuddy</div>
+        <div class="card-desc">4月密集迭代：微信小程序、GLM-5.1内置、医疗Skill、信通院认证筹备。生态覆盖持续扩大。</div>
+        <div class="card-tags">
+          <span class="tag tag-blue">微信小程序</span>
+          <span class="tag tag-purple">GLM-5.1</span>
+          <span class="tag tag-green">医疗Skill</span>
+        </div>
+      </div>
+
+      <div class="card ali">
+        <div class="card-version">v0.3.4+</div>
+        <div class="card-logo">⚡</div>
+        <div class="card-name">QoderWork</div>
+        <div class="card-maker">阿里巴巴 Qoder</div>
+        <div class="card-desc">Windows版正式上线，浏览器体验优化，快捷键自定义。覆盖Mac+Windows双平台。</div>
+        <div class="card-tags">
+          <span class="tag tag-orange">Windows上线</span>
+          <span class="tag tag-purple">沙盒安全</span>
+          <span class="tag tag-gold">v0.3.4</span>
+        </div>
+      </div>
+
+      <div class="card bytedance">
+        <div class="card-version">v2026.3.31</div>
+        <div class="card-logo">🌊</div>
+        <div class="card-name">ArkClaw</div>
+        <div class="card-maker">字节跳动 火山引擎</div>
+        <div class="card-desc">飞书插件持续更新，多渠道配置优化。零安装+飞书深度集成，仍是飞书用户首选。</div>
+        <div class="card-tags">
+          <span class="tag tag-teal">飞书插件</span>
+          <span class="tag tag-purple">云端SaaS</span>
+          <span class="tag tag-gold">v2026.3.31</span>
+        </div>
+      </div>
+
+      <div class="card yuanqi">
+        <div class="card-version">v2.x</div>
+        <div class="card-logo">🎮</div>
+        <div class="card-name">元气AI Bot</div>
+        <div class="card-maker">猎豹移动</div>
+        <div class="card-desc">图片批量处理+远程打印功能上线。完全免费仍是最大优势，Windows专精策略延续。</div>
+        <div class="card-tags">
+          <span class="tag tag-pink">图片批处理</span>
+          <span class="tag tag-green">完全免费</span>
+          <span class="tag tag-gold">v2.x</span>
+        </div>
+      </div>
+
+      <div class="card huawei">
+        <div class="card-version">v11.6.2.931</div>
+        <div class="card-logo">🔴</div>
+        <div class="card-name">小艺Claw</div>
+        <div class="card-maker">华为 鸿蒙生态</div>
+        <div class="card-desc">先锋版正式上线（付费套餐），首个获国家级安全认证的Claw类智能体，鸿蒙6.0+设备可用。</div>
+        <div class="card-tags">
+          <span class="tag tag-red">国家认证</span>
+          <span class="tag tag-purple">付费套餐</span>
+          <span class="tag tag-red">鸿蒙原生</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- v1 vs v2 功能变化 -->
+  <section>
+    <div class="section-title">
+      v1 → v2 功能变化追踪
+      <span class="section-badge">重点更新</span>
+    </div>
+    <p class="section-desc">对比4月14日v1报告与当前v2的数据差异</p>
+    <div class="diff-grid">
+
+      <div class="diff-card">
+        <div class="diff-header">
+          <div class="dot" style="background:#1677ff"></div>
+          <div class="name">WorkBuddy</div>
+        </div>
+        <div class="diff-body">
+          <div class="diff-item">
+            <div class="diff-icon up">↑</div>
+            <div class="diff-text">
+              <strong>微信小程序上线</strong><span class="diff-label add">新增</span><br>
+              3月31日新增：云端沙箱+本地双模式，语音/拍照/传文件直接派活
+            </div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-icon up">↑</div>
+            <div class="diff-text">
+              <strong>GLM-5.1全系内置</strong><span class="diff-label add">新增</span><br>
+              4月8日：Buddy全系产品内置GLM-5.1，复杂系统设计能力增强
+            </div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-icon up">↑</div>
+            <div class="diff-text">
+              <strong>医疗垂类Skill</strong><span class="diff-label add">新增</span><br>
+              4月17日：携手中康科技首发医疗健康Skill，健康管理/临床科研
+            </div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-icon up">↑</div>
+            <div class="diff-text">
+              <strong>系统托盘+微信扫码登录</strong><span class="diff-label add">新增</span><br>
+              4.9.x版本新增：最小化常驻托盘、微信小程序扫码登录
+            </div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-icon up">↑</div>
+            <div class="diff-text">
+              <strong>企业微信长链接+IM审批</strong><span class="diff-label add">新增</span><br>
+              新增企微长链接接入，IM文字审批高危命令确认
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="diff-card">
+        <div class="diff-header">
+          <div class="dot" style="background:#ff6a00"></div>
+          <div class="name">QoderWork</div>
+        </div>
+        <div class="diff-body">
+          <div class="diff-item">
+            <div class="diff-icon up">↑</div>
+            <div class="diff-text">
+              <strong>Windows版正式上线</strong><span class="diff-label add">重大更新</span><br>
+              3月4日：5人7天极限完成Mac→Windows迁移，覆盖双平台
+            </div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-icon up">↑</div>
+            <div class="diff-text">
+              <strong>模型分级系统</strong><span class="diff-label add">新增</span><br>
+              标准版/旗舰版分级选择，适配不同任务复杂度
+            </div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-icon up">↑</div>
+            <div class="diff-text">
+              <strong>安全沙盒环境</strong><span class="diff-label add">新增</span><br>
+              预制隔离虚拟空间执行任务，增强操作安全
+            </div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-icon up">↑</div>
+            <div class="diff-text">
+              <strong>快捷键自定义</strong><span class="diff-label add">优化</span><br>
+              v0.3.x系列：支持按使用习惯配置快捷键
+            </div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-icon neutral">~</div>
+            <div class="diff-text">
+              <strong>定价信息</strong><span class="diff-label remove">未公开</span><br>
+              官网仍未公示具体定价方案
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="diff-card">
+        <div class="diff-header">
+          <div class="dot" style="background:#2cc7b2"></div>
+          <div class="name">ArkClaw</div>
+        </div>
+        <div class="diff-body">
+          <div class="diff-item">
+            <div class="diff-icon up">↑</div>
+            <div class="diff-text">
+              <strong>飞书插件v2026.3.31</strong><span class="diff-label add">更新</span><br>
+              多渠道配置优化：飞书/企微/微信多开用户delivery设置
+            </div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-icon up">↑</div>
+            <div class="diff-text">
+              <strong>OpenClaw 2026.4.5支持</strong><span class="diff-label add">更新</span><br>
+              支持升级至2026.4.5版本，体验最新社区功能
+            </div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-icon neutral">~</div>
+            <div class="diff-text">
+              <strong>定价未变</strong><span class="diff-label new">稳定</span><br>
+              订阅制：轻量版29元/月，标准版49元/月，首月9.9元
+            </div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-icon neutral">~</div>
+            <div class="diff-text">
+              <strong>飞书生态优势</strong><span class="diff-label new">保持</span><br>
+              云端SaaS+零安装，仍是飞书重度用户首选
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="diff-card">
+        <div class="diff-header">
+          <div class="dot" style="background:#ff3e6c"></div>
+          <div class="name">元气AI Bot</div>
+        </div>
+        <div class="diff-body">
+          <div class="diff-item">
+            <div class="diff-icon up">↑</div>
+            <div class="diff-text">
+              <strong>图片批量处理</strong><span class="diff-label add">新增</span><br>
+              2月27日：一键处理成百上千张图片，适配各类平台要求
+            </div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-icon up">↑</div>
+            <div class="diff-text">
+              <strong>远程打印功能</strong><span class="diff-label add">新增</span><br>
+              手机隔空下令，文件即刻出纸，外出急找文件不慌
+            </div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-icon neutral">~</div>
+            <div class="diff-text">
+              <strong>完全免费政策</strong><span class="diff-label new">保持</span><br>
+              仍是五款产品中唯一完全免费选项
+            </div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-icon neutral">~</div>
+            <div class="diff-text">
+              <strong>Windows专精策略</strong><span class="diff-label new">保持</span><br>
+              Mac/Android/iOS有限支持，主攻Windows用户
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="diff-card">
+        <div class="diff-header">
+          <div class="dot" style="background:#c8001a"></div>
+          <div class="name">小艺Claw</div>
+        </div>
+        <div class="diff-body">
+          <div class="diff-item">
+            <div class="diff-icon up">↑</div>
+            <div class="diff-text">
+              <strong>先锋版正式上线</strong><span class="diff-label add">重大更新</span><br>
+              4月9日：11.6.2.931版本尝鲜，小艺Claw先锋版正式开放
+            </div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-icon up">↑</div>
+            <div class="diff-text">
+              <strong>付费套餐推出</strong><span class="diff-label add">重大变化</span><br>
+              体验包49元/1000点，标准包199元/6000点（31天）
+            </div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-icon up">↑</div>
+            <div class="diff-text">
+              <strong>国家级安全认证</strong><span class="diff-label add">新增</span><br>
+              4月17日：通过中国信通院Claw类智能体安全专项评测
+            </div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-icon up">↑</div>
+            <div class="diff-text">
+              <strong>鸿蒙6.0+深度适配</strong><span class="diff-label add">更新</span><br>
+              先锋版基于鸿蒙6.0+系统，多设备协同能力增强
+            </div>
+          </div>
+          <div class="diff-item">
+            <div class="diff-icon down">↓</div>
+            <div class="diff-text">
+              <strong>免费时代结束</strong><span class="diff-label remove">重大变化</span><br>
+              从Beta免费转向付费订阅，用户门槛提升
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 核心能力对比（更新版） -->
+  <section>
+    <div class="section-title">核心能力对比（更新版）</div>
+    <p class="section-desc">基于最新版本的多维度能力评估</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:120px">产品</th>
+            <th>当前版本</th>
+            <th>新增能力</th>
+            <th>移动端</th>
+            <th>企业微信</th>
+            <th>离线</th>
+            <th>安全认证</th>
+            <th>免费额度</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="prod-name">
+                <div class="dot" style="background:#1677ff"></div>
+                WorkBuddy
+              </div>
+            </td>
+            <td><span class="tag tag-blue" style="font-size:10px">v4.10.0</span></td>
+            <td>微信小程序、GLM-5.1、医疗Skill</td>
+            <td><span class="check">✓ 微信小程序</span></td>
+            <td><span class="check">✓ 长链接</span></td>
+            <td><span class="cross">✗</span></td>
+            <td><span class="partial">△ 腾讯云安全</span></td>
+            <td>5000积分/月</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="prod-name">
+                <div class="dot" style="background:#ff6a00"></div>
+                QoderWork
+              </div>
+            </td>
+            <td><span class="tag tag-orange" style="font-size:10px">v0.3.4+</span></td>
+            <td>Windows版、安全沙盒、模型分级</td>
+            <td><span class="cross">✗</span></td>
+            <td><span class="cross">✗</span></td>
+            <td><span class="partial">△ 部分</span></td>
+            <td><span class="check">✓ 本地安全</span></td>
+            <td>待确认</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="prod-name">
+                <div class="dot" style="background:#2cc7b2"></div>
+                ArkClaw
+              </div>
+            </td>
+            <td><span class="tag tag-teal" style="font-size:10px">v2026.3.31</span></td>
+            <td>多渠道配置优化、4.5版本支持</td>
+            <td><span class="partial">△ 飞书APP</span></td>
+            <td><span class="partial">△</span></td>
+            <td><span class="cross">✗</span></td>
+            <td><span class="partial">△ 火山引擎</span></td>
+            <td>首月9.9元</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="prod-name">
+                <div class="dot" style="background:#ff3e6c"></div>
+                元气AI Bot
+              </div>
+            </td>
+            <td><span class="tag tag-pink" style="font-size:10px">v2.x</span></td>
+            <td>图片批处理、远程打印</td>
+            <td><span class="partial">△ SecureLink</span></td>
+            <td><span class="partial">△ 有限</span></td>
+            <td><span class="partial">△ 部分</span></td>
+            <td><span class="check">✓ 国密+等保</span></td>
+            <td><span class="check" style="font-weight:600">完全免费</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="prod-name">
+                <div class="dot" style="background:#c8001a"></div>
+                小艺Claw
+              </div>
+            </td>
+            <td><span class="tag tag-red" style="font-size:10px">v11.6.2.931</span></td>
+            <td>先锋版上线、付费套餐、国家认证</td>
+            <td><span class="check">✓ 鸿蒙原生</span></td>
+            <td><span class="cross">✗</span></td>
+            <td><span class="check">✓ 本地任务</span></td>
+            <td><span class="check" style="font-weight:600">✓ 信通院认证</span></td>
+            <td><span class="cross">付费订阅</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 4月迭代亮点 -->
+  <section>
+    <div class="section-title">4月迭代亮点对比</div>
+    <p class="section-desc">各产品本月最重要的新功能或变化</p>
+    <div class="changelog-grid">
+
+      <div class="changelog-card">
+        <div class="changelog-header">
+          <div class="dot" style="background:#1677ff"></div>
+          <div class="name">WorkBuddy</div>
+          <div class="version">4月密集迭代</div>
+        </div>
+        <div class="changelog-body">
+          <div class="changelog-type new">✨ 新功能</div>
+          <ul class="changelog-list">
+            <li>微信小程序：云端+本地双模式，语音/拍照派活</li>
+            <li>GLM-5.1全系内置：复杂系统设计能力增强</li>
+            <li>医疗垂类Skill：中康科技卓睦鸟医疗大模型</li>
+            <li>系统托盘：最小化常驻，微信扫码登录</li>
+            <li>企微长链接：IM文字审批高危命令</li>
+          </ul>
+          <div class="changelog-type fix" style="margin-top:10px">🔧 稳定性</div>
+          <ul class="changelog-list">
+            <li>修复Windows/Mac 30+项Bug</li>
+            <li>MCP连接稳定性优化</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="changelog-card">
+        <div class="changelog-header">
+          <div class="dot" style="background:#ff6a00"></div>
+          <div class="name">QoderWork</div>
+          <div class="version">3月至今</div>
+        </div>
+        <div class="changelog-body">
+          <div class="changelog-type new">✨ 新功能</div>
+          <ul class="changelog-list">
+            <li>Windows版正式上线（3月4日）</li>
+            <li>模型分级系统：标准版/旗舰版</li>
+            <li>安全沙盒环境：隔离虚拟空间执行</li>
+            <li>快捷键自定义（v0.3.x）</li>
+            <li>浏览器体验优化</li>
+          </ul>
+          <div class="changelog-type opt" style="margin-top:10px">📌 待确认</div>
+          <ul class="changelog-list">
+            <li>具体定价方案尚未公开</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="changelog-card">
+        <div class="changelog-header">
+          <div class="dot" style="background:#2cc7b2"></div>
+          <div class="name">ArkClaw</div>
+          <div class="version">v2026.3.31</div>
+        </div>
+        <div class="changelog-body">
+          <div class="changelog-type new">✨ 新功能</div>
+          <ul class="changelog-list">
+            <li>飞书官方插件v2026.3.31更新</li>
+            <li>多渠道配置优化（飞书/企微/微信多开）</li>
+            <li>支持升级至OpenClaw 2026.4.5</li>
+          </ul>
+          <div class="changelog-type opt" style="margin-top:10px">📌 保持稳定</div>
+          <ul class="changelog-list">
+            <li>订阅制定价未变</li>
+            <li>飞书生态深度集成优势保持</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="changelog-card">
+        <div class="changelog-header">
+          <div class="dot" style="background:#ff3e6c"></div>
+          <div class="name">元气AI Bot</div>
+          <div class="version">2月至今</div>
+        </div>
+        <div class="changelog-body">
+          <div class="changelog-type new">✨ 新功能</div>
+          <ul class="changelog-list">
+            <li>图片批量处理：一键处理成百上千张</li>
+            <li>远程打印：手机隔空下令文件出纸</li>
+            <li>文件自动命名：项目前缀+日期编号</li>
+            <li>桌面自动整理：AI归类图标</li>
+          </ul>
+          <div class="changelog-type opt" style="margin-top:10px">📌 保持优势</div>
+          <ul class="changelog-list">
+            <li>完全免费政策延续</li>
+            <li>Windows专精策略不变</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="changelog-card">
+        <div class="changelog-header">
+          <div class="dot" style="background:#c8001a"></div>
+          <div class="name">小艺Claw</div>
+          <div class="version">v11.6.2.931</div>
+        </div>
+        <div class="changelog-body">
+          <div class="changelog-type new">✨ 新功能</div>
+          <ul class="changelog-list">
+            <li>先锋版正式上线（4月9日）</li>
+            <li>鸿蒙6.0+深度适配</li>
+            <li>付费套餐：体验包49元/标准包199元</li>
+            <li>首批人格Skills市场开放</li>
+          </ul>
+          <div class="changelog-type new" style="margin-top:10px">🏆 认证里程碑</div>
+          <ul class="changelog-list">
+            <li>国内首个信通院Claw类智能体安全认证（4月17日）</li>
+          </ul>
+          <div class="changelog-type fix" style="margin-top:10px">⚠️ 重要变化</div>
+          <ul class="changelog-list">
+            <li>从Beta免费转向付费订阅</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 评分更新 -->
+  <section>
+    <div class="section-title">综合评分（更新版）</div>
+    <p class="section-desc">基于最新版本调整的六维评分，满分10分</p>
+    <div class="score-grid">
+
+      <div class="score-card">
+        <div class="score-header">
+          <div class="score-dot" style="background:#1677ff"></div>
+          <div class="score-name">WorkBuddy</div>
+        </div>
+        <div class="score-row"><div class="score-label">易用性</div><div class="score-bar-bg"><div class="score-bar" style="width:90%;background:linear-gradient(90deg,#1677ff,#60a5fa)"></div></div><div class="score-val" style="color:#60a5fa">9.0</div></div>
+        <div class="score-row"><div class="score-label">功能广度</div><div class="score-bar-bg"><div class="score-bar" style="width:91%;background:linear-gradient(90deg,#1677ff,#60a5fa)"></div></div><div class="score-val" style="color:#60a5fa">9.1 ↑</div></div>
+        <div class="score-row"><div class="score-label">生态集成</div><div class="score-bar-bg"><div class="score-bar" style="width:94%;background:linear-gradient(90deg,#1677ff,#60a5fa)"></div></div><div class="score-val" style="color:#60a5fa">9.4 ↑</div></div>
+        <div class="score-row"><div class="score-label">数据安全</div><div class="score-bar-bg"><div class="score-bar" style="width:85%;background:linear-gradient(90deg,#1677ff,#60a5fa)"></div></div><div class="score-val" style="color:#60a5fa">8.5</div></div>
+        <div class="score-row"><div class="score-label">性价比</div><div class="score-bar-bg"><div class="score-bar" style="width:75%;background:linear-gradient(90deg,#1677ff,#60a5fa)"></div></div><div class="score-val" style="color:#60a5fa">7.5</div></div>
+        <div class="score-row"><div class="score-label">迭代速度</div><div class="score-bar-bg"><div class="score-bar" style="width:96%;background:linear-gradient(90deg,#1677ff,#60a5fa)"></div></div><div class="score-val" style="color:#60a5fa">9.6 ↑</div></div>
+      </div>
+
+      <div class="score-card">
+        <div class="score-header">
+          <div class="score-dot" style="background:#ff6a00"></div>
+          <div class="score-name">QoderWork</div>
+        </div>
+        <div class="score-row"><div class="score-label">易用性</div><div class="score-bar-bg"><div class="score-bar" style="width:82%;background:linear-gradient(90deg,#ff6a00,#fbbf24)"></div></div><div class="score-val" style="color:#fb923c">8.2 ↑</div></div>
+        <div class="score-row"><div class="score-label">功能广度</div><div class="score-bar-bg"><div class="score-bar" style="width:87%;background:linear-gradient(90deg,#ff6a00,#fbbf24)"></div></div><div class="score-val" style="color:#fb923c">8.7 ↑</div></div>
+        <div class="score-row"><div class="score-label">生态集成</div><div class="score-bar-bg"><div class="score-bar" style="width:68%;background:linear-gradient(90deg,#ff6a00,#fbbf24)"></div></div><div class="score-val" style="color:#fb923c">6.8 ↑</div></div>
+        <div class="score-row"><div class="score-label">数据安全</div><div class="score-bar-bg"><div class="score-bar" style="width:94%;background:linear-gradient(90deg,#ff6a00,#fbbf24)"></div></div><div class="score-val" style="color:#fb923c">9.4 ↑</div></div>
+        <div class="score-row"><div class="score-label">性价比</div><div class="score-bar-bg"><div class="score-bar" style="width:78%;background:linear-gradient(90deg,#ff6a00,#fbbf24)"></div></div><div class="score-val" style="color:#fb923c">7.8</div></div>
+        <div class="score-row"><div class="score-label">迭代速度</div><div class="score-bar-bg"><div class="score-bar" style="width:75%;background:linear-gradient(90deg,#ff6a00,#fbbf24)"></div></div><div class="score-val" style="color:#fb923c">7.5</div></div>
+      </div>
+
+      <div class="score-card">
+        <div class="score-header">
+          <div class="score-dot" style="background:#2cc7b2"></div>
+          <div class="score-name">ArkClaw</div>
+        </div>
+        <div class="score-row"><div class="score-label">易用性</div><div class="score-bar-bg"><div class="score-bar" style="width:96%;background:linear-gradient(90deg,#2cc7b2,#34d399)"></div></div><div class="score-val" style="color:#34d399">9.6</div></div>
+        <div class="score-row"><div class="score-label">功能广度</div><div class="score-bar-bg"><div class="score-bar" style="width:75%;background:linear-gradient(90deg,#2cc7b2,#34d399)"></div></div><div class="score-val" style="color:#34d399">7.5</div></div>
+        <div class="score-row"><div class="score-label">生态集成</div><div class="score-bar-bg"><div class="score-bar" style="width:95%;background:linear-gradient(90deg,#2cc7b2,#34d399)"></div></div><div class="score-val" style="color:#34d399">9.5</div></div>
+        <div class="score-row"><div class="score-label">数据安全</div><div class="score-bar-bg"><div class="score-bar" style="width:72%;background:linear-gradient(90deg,#2cc7b2,#34d399)"></div></div><div class="score-val" style="color:#34d399">7.2</div></div>
+        <div class="score-row"><div class="score-label">性价比</div><div class="score-bar-bg"><div class="score-bar" style="width:70%;background:linear-gradient(90deg,#2cc7b2,#34d399)"></div></div><div class="score-val" style="color:#34d399">7.0</div></div>
+        <div class="score-row"><div class="score-label">迭代速度</div><div class="score-bar-bg"><div class="score-bar" style="width:70%;background:linear-gradient(90deg,#2cc7b2,#34d399)"></div></div><div class="score-val" style="color:#34d399">7.0</div></div>
+      </div>
+
+      <div class="score-card">
+        <div class="score-header">
+          <div class="score-dot" style="background:#ff3e6c"></div>
+          <div class="score-name">元气AI Bot</div>
+        </div>
+        <div class="score-row"><div class="score-label">易用性</div><div class="score-bar-bg"><div class="score-bar" style="width:94%;background:linear-gradient(90deg,#ff3e6c,#fb923c)"></div></div><div class="score-val" style="color:#fb7185">9.4</div></div>
+        <div class="score-row"><div class="score-label">功能广度</div><div class="score-bar-bg"><div class="score-bar" style="width:85%;background:linear-gradient(90deg,#ff3e6c,#fb923c)"></div></div><div class="score-val" style="color:#fb7185">8.5 ↑</div></div>
+        <div class="score-row"><div class="score-label">生态集成</div><div class="score-bar-bg"><div class="score-bar" style="width:68%;background:linear-gradient(90deg,#ff3e6c,#fb923c)"></div></div><div class="score-val" style="color:#fb7185">6.8</div></div>
+        <div class="score-row"><div class="score-label">数据安全</div><div class="score-bar-bg"><div class="score-bar" style="width:93%;background:linear-gradient(90deg,#ff3e6c,#fb923c)"></div></div><div class="score-val" style="color:#fb7185">9.3</div></div>
+        <div class="score-row"><div class="score-label">性价比</div><div class="score-bar-bg"><div class="score-bar" style="width:100%;background:linear-gradient(90deg,#ff3e6c,#fb923c)"></div></div><div class="score-val" style="color:#fb7185">10</div></div>
+        <div class="score-row"><div class="score-label">迭代速度</div><div class="score-bar-bg"><div class="score-bar" style="width:60%;background:linear-gradient(90deg,#ff3e6c,#fb923c)"></div></div><div class="score-val" style="color:#fb7185">6.0</div></div>
+      </div>
+
+      <div class="score-card">
+        <div class="score-header">
+          <div class="score-dot" style="background:#c8001a"></div>
+          <div class="score-name">小艺Claw</div>
+        </div>
+        <div class="score-row"><div class="score-label">易用性</div><div class="score-bar-bg"><div class="score-bar" style="width:88%;background:linear-gradient(90deg,#c8001a,#f97316)"></div></div><div class="score-val" style="color:#f87171">8.8</div></div>
+        <div class="score-row"><div class="score-label">功能广度</div><div class="score-bar-bg"><div class="score-bar" style="width:72%;background:linear-gradient(90deg,#c8001a,#f97316)"></div></div><div class="score-val" style="color:#f87171">7.2 ↑</div></div>
+        <div class="score-row"><div class="score-label">生态集成</div><div class="score-bar-bg"><div class="score-bar" style="width:88%;background:linear-gradient(90deg,#c8001a,#f97316)"></div></div><div class="score-val" style="color:#f87171">8.8 ↑</div></div>
+        <div class="score-row"><div class="score-label">数据安全</div><div class="score-bar-bg"><div class="score-bar" style="width:98%;background:linear-gradient(90deg,#c8001a,#f97316)"></div></div><div class="score-val" style="color:#f87171">9.8 ↑</div></div>
+        <div class="score-row"><div class="score-label">性价比</div><div class="score-bar-bg"><div class="score-bar" style="width:72%;background:linear-gradient(90deg,#c8001a,#f97316)"></div></div><div class="score-val" style="color:#f87171">7.2 ↓</div></div>
+        <div class="score-row"><div class="score-label">迭代速度</div><div class="score-bar-bg"><div class="score-bar" style="width:82%;background:linear-gradient(90deg,#c8001a,#f97316)"></div></div><div class="score-val" style="color:#f87171">8.2 ↑</div></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 定价方案（更新版） -->
+  <section>
+    <div class="section-title">定价方案（更新版）</div>
+    <p class="section-desc">新增小艺Claw付费套餐，调整部分产品定价</p>
+    <div class="price-grid">
+
+      <div class="price-card">
+        <div class="price-brand">腾讯云</div>
+        <div class="price-product" style="color:#1677ff">WorkBuddy</div>
+        <div class="price-main" style="color:#1677ff">¥58</div>
+        <div class="price-unit">个人专业版 / 月</div>
+        <ul class="price-items">
+          <li><span>免费体验</span><span style="color:#10b981">5000 Credits</span></li>
+          <li><span>每日赠送</span><span>100积分</span></li>
+          <li><span>积分充值</span><span>¥38/1000分</span></li>
+        </ul>
+        <div class="price-note">🏆 微信小程序+GLM-5.1+医疗Skill</div>
+      </div>
+
+      <div class="price-card">
+        <div class="price-brand">阿里巴巴</div>
+        <div class="price-product" style="color:#ff6a00">QoderWork</div>
+        <div class="price-main" style="color:#ff6a00">—</div>
+        <div class="price-unit">官网未公示价格</div>
+        <ul class="price-items">
+          <li><span>Windows版</span><span style="color:#10b981">✓ 上线</span></li>
+          <li><span>本地运行</span><span style="color:#10b981">无云费</span></li>
+          <li><span>模型分级</span><span>标准/旗舰</span></li>
+        </ul>
+        <div class="price-note">⚠️ 定价待官方确认</div>
+      </div>
+
+      <div class="price-card">
+        <div class="price-brand">字节跳动</div>
+        <div class="price-product" style="color:#2cc7b2">ArkClaw</div>
+        <div class="price-main" style="color:#2cc7b2">¥29</div>
+        <div class="price-unit">轻量版 / 月</div>
+        <ul class="price-items">
+          <li><span>首月特惠</span><span style="color:#f59e0b">¥9.9起</span></li>
+          <li><span>标准版</span><span>¥49/月</span></li>
+          <li><span>Pro套餐</span><span>¥230/月</span></li>
+        </ul>
+        <div class="price-note">⚠️ 到期仅保留24h数据</div>
+      </div>
+
+      <div class="price-card">
+        <div class="price-brand">猎豹移动</div>
+        <div class="price-product" style="color:#ff3e6c">元气AI Bot</div>
+        <div class="price-free">完全免费</div>
+        <div class="price-unit" style="margin-top:10px">全功能开放</div>
+        <ul class="price-items">
+          <li><span>基础功能</span><span style="color:#10b981">永久免费</span></li>
+          <li><span>企业版</span><span>私有化付费</span></li>
+          <li><span>最低配置</span><span>8GB内存</span></li>
+        </ul>
+        <div class="price-note">🏆 五款唯一完全免费</div>
+      </div>
+
+      <div class="price-card">
+        <div class="price-brand">华为</div>
+        <div class="price-product" style="color:#c8001a">小艺Claw</div>
+        <div class="price-main" style="color:#c8001a">¥49</div>
+        <div class="price-unit">体验包 / 首发31天</div>
+        <ul class="price-items">
+          <li><span>体验包</span><span style="color:#f59e0b">¥49/1000点</span></li>
+          <li><span>标准包</span><span style="color:#f59e0b">¥199/6000点</span></li>
+          <li><span>原价</span><span>¥69/¥299</span></li>
+        </ul>
+        <div class="price-note">⚠️ Beta免费时代已结束</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 场景推荐（更新版） -->
+  <section>
+    <div class="section-title">选型建议（更新版）</div>
+    <p class="section-desc">基于4月迭代动态调整的适用场景</p>
+    <div class="verdict-grid">
+
+      <div class="verdict-card tencent">
+        <div class="verdict-for">最适合</div>
+        <div class="verdict-name" style="color:#1677ff">WorkBuddy</div>
+        <span class="verdict-best" style="background:rgba(22,119,255,.15);color:#60a5fa">迭代最快 · 生态最广</span>
+        <div class="verdict-desc">4月密集迭代，微信小程序+医疗Skill使其能力边界快速扩张。微信/企微重度用户首选。</div>
+      </div>
+
+      <div class="verdict-card ali">
+        <div class="verdict-for">最适合</div>
+        <div class="verdict-name" style="color:#ff6a00">QoderWork</div>
+        <span class="verdict-best" style="background:rgba(255,106,0,.15);color:#fb923c">Windows上线 · 安全最强</span>
+        <div class="verdict-desc">Windows版上线覆盖双平台，安全沙盒+本地运行是数据保密场景最优解。定价待确认。</div>
+      </div>
+
+      <div class="verdict-card bytedance">
+        <div class="verdict-for">最适合</div>
+        <div class="verdict-name" style="color:#2cc7b2">ArkClaw</div>
+        <span class="verdict-best" style="background:rgba(44,199,178,.15);color:#34d399">飞书专精 · 零门槛</span>
+        <div class="verdict-desc">飞书生态集成仍无可替代，零安装开箱即用。非技术用户快速上手首选。</div>
+      </div>
+
+      <div class="verdict-card yuanqi">
+        <div class="verdict-for">最适合</div>
+        <div class="verdict-name" style="color:#ff3e6c">元气AI Bot</div>
+        <span class="verdict-best" style="background:rgba(255,62,108,.15);color:#fb7185">零成本 · 图片处理</span>
+        <div class="verdict-desc">唯一完全免费，图片批量处理+远程打印功能实用。预算有限的Windows用户入门首选。</div>
+      </div>
+
+      <div class="verdict-card huawei">
+        <div class="verdict-for">最适合</div>
+        <div class="verdict-name" style="color:#c8001a">小艺Claw</div>
+        <span class="verdict-best" style="background:rgba(200,0,26,.15);color:#f87171">安全认证 · 鸿蒙生态</span>
+        <div class="verdict-desc">首个获国家级认证的Claw类产品，鸿蒙6.0+用户可享端云协同+离线安全。需付费订阅。</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- v1 vs v2 总评 -->
+  <section>
+    <div class="section-title">v1 → v2 版本总结</div>
+    <p class="section-desc">4天内的关键变化速览</p>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px 30px;">
+      <div style="display:grid;gap:14px;">
+
+        <div style="display:flex;gap:14px;align-items:flex-start;padding-bottom:14px;border-bottom:1px solid var(--border)">
+          <div style="width:10px;height:10px;background:#1677ff;border-radius:50%;flex-shrink:0;margin-top:5px"></div>
+          <div>
+            <div style="font-weight:700;margin-bottom:3px;font-size:14px">WorkBuddy <span style="font-size:11px;color:#64748b;font-weight:400">综合实力最强</span> <span class="new-tag" style="font-size:9px">迭代冠军</span></div>
+            <div style="font-size:13px;color:#94a3b8">4月累计发布4个版本（4.8.0→4.10.0），新增微信小程序、GLM-5.1、医疗Skill、企业微信长链接等重磅功能。生态集成评分从9.2→9.4，功能广度8.8→9.1，迭代速度9.0→9.6。</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:14px;align-items:flex-start;padding-bottom:14px;border-bottom:1px solid var(--border)">
+          <div style="width:10px;height:10px;background:#ff6a00;border-radius:50%;flex-shrink:0;margin-top:5px"></div>
+          <div>
+            <div style="font-weight:700;margin-bottom:3px;font-size:14px">QoderWork <span style="font-size:11px;color:#64748b;font-weight:400">安全深度最优</span> <span class="new-tag" style="font-size:9px">平台补全</span></div>
+            <div style="font-size:13px;color:#94a3b8">Windows版上线完成双平台覆盖，安全沙盒+模型分级提升专业场景能力。本地安全评分9.2→9.4，但定价信息仍未公开是最大悬念。</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:14px;align-items:flex-start;padding-bottom:14px;border-bottom:1px solid var(--border)">
+          <div style="width:10px;height:10px;background:#2cc7b2;border-radius:50%;flex-shrink:0;margin-top:5px"></div>
+          <div>
+            <div style="font-weight:700;margin-bottom:3px;font-size:14px">ArkClaw <span style="font-size:11px;color:#64748b;font-weight:400">飞书生态最优</span> <span class="new-tag" style="font-size:9px;background:rgba(139,92,246,.15);color:#a78bfa;border-color:rgba(139,92,246,.3)">稳步迭代</span></div>
+            <div style="font-size:13px;color:#94a3b8">飞书插件更新至v2026.3.31，支持OpenClaw 2026.4.5。多渠道配置优化，整体表现稳健，但缺乏突破性新功能。</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:14px;align-items:flex-start;padding-bottom:14px;border-bottom:1px solid var(--border)">
+          <div style="width:10px;height:10px;background:#ff3e6c;border-radius:50%;flex-shrink:0;margin-top:5px"></div>
+          <div>
+            <div style="font-weight:700;margin-bottom:3px;font-size:14px">元气AI Bot <span style="font-size:11px;color:#64748b;font-weight:400">性价比最优</span> <span class="new-tag" style="font-size:9px;background:rgba(139,92,246,.15);color:#a78bfa;border-color:rgba(139,92,246,.3)">功能补强</span></div>
+            <div style="font-size:13px;color:#94a3b8">图片批量处理+远程打印两大实用功能上线。完全免费优势持续，功能广度8.2→8.5。迭代速度较慢，但产品定位明确。</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <div style="width:10px;height:10px;background:#c8001a;border-radius:50%;flex-shrink:0;margin-top:5px"></div>
+          <div>
+            <div style="font-weight:700;margin-bottom:3px;font-size:14px">小艺Claw <span style="font-size:11px;color:#64748b;font-weight:400">安全认证最优</span> <span class="new-tag" style="font-size:9px;background:rgba(239,68,68,.15);color:#ef4444;border-color:rgba(239,68,68,.3)">付费转型</span></div>
+            <div style="font-size:13px;color:#94a3b8">先锋版正式上线+付费套餐推出，标志Beta免费时代结束。4月17日获得国内首个信通院Claw类智能体安全认证，数据安全9.6→9.8，性价比7.5→7.2。</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <p>v1.0 发布：2026年4月14日 · v2.0 更新：2026年4月18日</p>
+  <p>数据来源：官方更新日志 · IT之家 · 行业媒体报道</p>
+  <p style="margin-top:6px">建议定期追踪各产品迭代动态，选型决策应基于最新官方公告</p>
+</footer>
+
+</body>
+</html>
