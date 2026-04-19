@@ -28,6 +28,77 @@
       --border-color: #475569;
     }
 
+    :root[data-theme="light"] {
+      --bg-primary: #F8FAFC;
+      --bg-secondary: #FFFFFF;
+      --bg-card: #F1F5F9;
+      --text-primary: #0F172A;
+      --text-secondary: #64748B;
+      --border-color: #E2E8F0;
+    }
+
+    :root[data-theme="light"] .entry-card:hover {
+      box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+    }
+
+    :root[data-theme="light"] .nav-item-count {
+      background: var(--bg-card);
+    }
+
+    :root[data-theme="light"] .entry-tag {
+      background: var(--bg-card);
+    }
+
+    :root[data-theme="light"] .modal-overlay {
+      background: rgba(0,0,0,.3);
+    }
+
+    :root[data-theme="light"] .copyright-bar {
+      background: rgba(59,130,246,.05);
+    }
+
+    :root[data-theme="light"] .search-input {
+      background: var(--bg-primary);
+    }
+
+    :root[data-theme="light"] .admin-link {
+      background: var(--bg-card);
+    }
+
+    /* ── Top bar (toggles) ── */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      height: 44px;
+      font-size: 13px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 999;
+    }
+    .top-bar-left { color: var(--text-secondary); }
+    .top-bar-right { display: flex; align-items: center; gap: 8px; }
+
+    .toggle-btn {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .toggle-btn:hover { border-color: var(--accent-blue); color: var(--text-primary); }
+    .toggle-btn.active { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
@@ -43,7 +114,8 @@
       border-right: 1px solid var(--border-color);
       padding: 24px 16px;
       position: fixed;
-      height: 100vh;
+      top: 44px;
+      height: calc(100vh - 44px);
       overflow-y: auto;
       display: flex;
       flex-direction: column;
@@ -158,6 +230,7 @@
       margin-left: 280px;
       padding: 32px 48px;
       min-height: 100vh;
+      margin-top: 44px;
     }
 
     .page-header { margin-bottom: 32px; }
@@ -420,9 +493,14 @@
   </style>
 </head>
 <body>
-  <div class="copyright-bar">
-    <span class="cc-icon">©</span>
-    引用本站报告、信息和数据请注明出处并放置本站链接 · 分享仅用于个人兴趣研究 · 商用请联系 <a href="mailto:ahua2020@qq.com" style="color:var(--accent-blue);text-decoration:none">ahua2020@qq.com</a>
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <span class="cc-icon">©</span> <span data-i18n="copyright">引用本站报告、信息和数据请注明出处并放置本站链接 · 分享仅用于个人兴趣研究 · 商用请联系</span> <a href="mailto:ahua2020@qq.com" style="color:var(--accent-blue);text-decoration:none">ahua2020@qq.com</a>
+    </div>
+    <div class="top-bar-right">
+      <button class="toggle-btn" id="langToggle" onclick="toggleLang()">EN</button>
+      <button class="toggle-btn" id="themeToggle" onclick="toggleTheme()">☀️</button>
+    </div>
   </div>
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
@@ -544,13 +622,15 @@
 
     function renderSidebar() {
       const nav = document.getElementById('categoryNav');
-      nav.innerHTML = siteData.categories.map(cat => `
+      nav.innerHTML = siteData.categories.map(cat => {
+        const catName = (i18n[currentLang].catNames[cat.id]) || cat.name;
+        return `
         <a href="#" class="nav-item" data-category="${cat.id}">
           <span class="nav-item-icon">${cat.icon}</span>
-          <span>${cat.name}</span>
+          <span>${catName}</span>
           <span class="nav-item-count">${siteData.entries.filter(e => e.category === cat.id).length}</span>
         </a>
-      `).join('');
+      `}).join('');
 
       nav.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', (e) => {
@@ -606,11 +686,12 @@
       }
 
       if (filtered.length === 0) {
+        const t = i18n[currentLang];
         grid.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">📭</div>
-            <div class="empty-state-title">暂无成果</div>
-            <p>${searchQuery ? '没有找到匹配的研究成果' : '点击侧边栏"管理上传"添加第一个成果'}</p>
+            <div class="empty-state-title">${t.emptyTitle}</div>
+            <p>${searchQuery ? t.emptySearch : t.emptyAdd}</p>
           </div>
         `;
         return;
@@ -620,6 +701,7 @@
 
       grid.innerHTML = filtered.map(entry => {
         const cat = siteData.categories.find(c => c.id === entry.category) || { name: '其他', color: '#6B7280', icon: '📚' };
+        const catName = (i18n[currentLang].catNames[entry.category]) || cat.name;
         return `
           <article class="entry-card" onclick="openEntry('${entry.file}')">
             <div class="entry-card-preview" style="background: linear-gradient(135deg, ${cat.color}20 0%, var(--bg-secondary) 100%);">
@@ -628,9 +710,9 @@
             <div class="entry-card-body">
               <div class="entry-card-meta">
                 <span class="entry-card-date">${formatDate(entry.date)}</span>
-                <span class="entry-card-category category-${entry.category}">${cat.name}</span>
+                <span class="entry-card-category category-${entry.category}">${catName}</span>
               </div>
-              <h3 class="entry-card-title">${entry.title}</h3>
+              <h3 class="entry-card-title">${(i18n[currentLang].entryTitles[entry.id]) || entry.title}</h3>
               <p class="entry-card-desc">${entry.description}</p>
               <div class="entry-card-tags">
                 ${(entry.tags || []).slice(0, 4).map(tag => `<span class="entry-tag">${tag}</span>`).join('')}
@@ -661,6 +743,146 @@
     }
 
     loadData();
+
+    /* ── i18n & Theme ── */
+    const i18n = {
+      zh: {
+        copyright: '引用本站报告、信息和数据请注明出处并放置本站链接 · 分享仅用于个人兴趣研究 · 商用请联系',
+        navAll: '全部成果',
+        navQuick: '快速导航',
+        navCategory: '主题分类',
+        searchPlaceholder: '搜索研究成果...',
+        statTotal: '全部成果',
+        statMonth: '本月新增',
+        statCategories: '涉及主题',
+        statTags: '标签数量',
+        emptyTitle: '暂无成果',
+        emptySearch: '没有找到匹配的研究成果',
+        emptyAdd: '点击侧边栏"管理上传"添加第一个成果',
+        adminLink: '管理上传',
+        aboutLink: '关于作者',
+        aboutTitle: '👤 关于作者',
+        aboutP1: '一名 AI 原生系统创造者。',
+        aboutP2: '本站为随手存放个人公开研究内容的轻量站点，无刻意排版、无商业用途、无发布计划，仅作为个人兴趣、思考的存档与交流平台。',
+        aboutP3: '站内内容均为本人独立研究与整理成果，从 GitHub 开源社区学到很多知识和技能，秉持开源分享理念，研究成果仅供个人交流探讨。',
+        aboutP4: '如需基于本研究成果开展学术发表、软件著作权登记、专利申请等事宜，敬请务必提前联系本人取得正式授权。',
+        aboutContact: '联系邮箱：',
+        pageTitle: 'my AI Soul · 研究成果',
+        pageDesc: '持续积累 · 深度研究 · 工程实践',
+        footerP1: ' — 个人研究成果存档与交流平台',
+        footerP2: '引用本站报告、信息和数据请注明出处并放置本站链接：',
+        footerP3: '分享仅用于个人兴趣研究。如需商用，请联系：',
+        sidebarTitle: '研究工作台',
+        sidebarSub: 'AI & 工程实践 · 知识沉淀',
+        catNames: { 'ai-research': 'AI研究', 'financial': '金融数据', 'engineering': '工程实践', 'reports': '分析报告', 'other': '其他' },
+        entryTitles: {
+          'sdd-engineering-guide': 'SDD规范驱动开发工程实践指南',
+          'workbuddy等桌面现代应用对比分析': 'workbuddy等桌面现代应用对比分析',
+          'bank-performance-2025': '上市银行2025年度业绩发布会 · AI与金融科技专题',
+          'subagents-stats-report': 'Subagents 运行统计报告 — 70 Agent 并行实测',
+          'subagents-deep-analysis': '深度解读：70 Agent 并行搭建银行系统 — 编排策略与效率分析',
+          'openclaw-research': '国内大厂 OpenClaw 系列产品研究报告'
+        }
+      },
+      en: {
+        copyright: 'Please cite the source and link when referencing reports, data or information from this site · For personal research only · Commercial use contact:',
+        navAll: 'All Works',
+        navQuick: 'Navigation',
+        navCategory: 'Categories',
+        searchPlaceholder: 'Search research works...',
+        statTotal: 'All Works',
+        statMonth: 'This Month',
+        statCategories: 'Topics',
+        statTags: 'Tags',
+        emptyTitle: 'No Works',
+        emptySearch: 'No matching research works found',
+        emptyAdd: 'Click "Manage Uploads" in the sidebar to add your first work',
+        adminLink: 'Manage Uploads',
+        aboutLink: 'About Author',
+        aboutTitle: '👤 About Author',
+        aboutP1: 'An AI-native system creator.',
+        aboutP2: 'This site is a lightweight archive for personal public research content — no deliberate styling, no commercial use, no publication schedule — just a space for archiving and sharing personal interests and reflections.',
+        aboutP3: 'All content represents my independent research. I\'ve learned a lot from the GitHub open-source community and uphold the spirit of open-source sharing. Research results are for personal exchange and discussion only.',
+        aboutP4: 'For academic publication, software copyright registration, or patent applications based on these research results, please contact me in advance for formal authorization.',
+        aboutContact: 'Email: ',
+        pageTitle: 'my AI Soul · Research Works',
+        pageDesc: 'Continuous Learning · Deep Research · Engineering Practice',
+        footerP1: ' — Personal Research Archive & Exchange',
+        footerP2: 'Please cite the source with link when referencing: ',
+        footerP3: 'For personal research only. Commercial use, please contact: ',
+        sidebarTitle: 'Research Bench',
+        sidebarSub: 'AI & Engineering · Knowledge',
+        catNames: { 'ai-research': 'AI Research', 'financial': 'Financial Data', 'engineering': 'Engineering', 'reports': 'Reports', 'other': 'Other' },
+        entryTitles: {
+          'sdd-engineering-guide': 'SDD Specification-Driven Development Engineering Guide',
+          'workbuddy等桌面现代应用对比分析': 'WorkBuddy & Modern Desktop AI App Comparison',
+          'bank-performance-2025': 'Listed Banks 2025 Earnings — AI & FinTech Special',
+          'subagents-stats-report': 'Subagents Runtime Stats — 70 Agents Parallel Benchmark',
+          'subagents-deep-analysis': 'Deep Dive: 70 Agents Building a Banking System — Orchestration & Efficiency',
+          'openclaw-research': 'OpenClaw Series AI Agent Products Research Report'
+        }
+      }
+    };
+    let currentLang = localStorage.getItem('lang') || 'zh';
+    let currentTheme = localStorage.getItem('theme') || 'dark';
+
+    function applyLang() {
+      const t = i18n[currentLang];
+      document.getElementById('langToggle').textContent = currentLang === 'zh' ? 'EN' : '中文';
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (t[key]) el.textContent = t[key];
+      });
+      document.querySelector('.page-title').textContent = t.pageTitle;
+      document.querySelector('.page-desc').textContent = t.pageDesc;
+      document.querySelector('.search-input').placeholder = t.searchPlaceholder;
+      document.querySelector('.sidebar-title').textContent = t.sidebarTitle;
+      document.querySelectorAll('.sidebar-subtitle')[0].textContent = t.sidebarSub;
+      document.querySelectorAll('.stat-label')[0].textContent = t.statTotal;
+      document.querySelectorAll('.stat-label')[1].textContent = t.statMonth;
+      document.querySelectorAll('.stat-label')[2].textContent = t.statCategories;
+      document.querySelectorAll('.stat-label')[3].textContent = t.statTags;
+      document.querySelectorAll('.nav-label')[0].textContent = t.navQuick;
+      document.querySelectorAll('.nav-label')[1].textContent = t.navCategory;
+      document.querySelector('[data-category="all"] span:not(.nav-item-icon):not(.nav-item-count)').textContent = t.navAll;
+      document.querySelectorAll('.sidebar-footer .admin-link span:last-child')[0].textContent = t.adminLink;
+      document.querySelectorAll('.sidebar-footer .admin-link span:last-child')[1].textContent = t.aboutLink;
+      // footer
+      const fp = document.querySelectorAll('.site-footer p');
+      fp[0].innerHTML = '<strong>my AI Soul</strong>' + t.footerP1;
+      fp[1].innerHTML = t.footerP2 + '<a href="https://ahua2020qq.github.io/research-site/" target="_blank">https://ahua2020qq.github.io/research-site/</a>';
+      fp[2].innerHTML = t.footerP3 + '<a href="mailto:ahua2020@qq.com">ahua2020@qq.com</a>';
+      // about modal
+      document.querySelector('.modal-card h2').textContent = t.aboutTitle;
+      document.querySelectorAll('.modal-card p')[0].textContent = t.aboutP1;
+      document.querySelectorAll('.modal-card p')[1].textContent = t.aboutP2;
+      document.querySelectorAll('.modal-card p')[2].textContent = t.aboutP3;
+      document.querySelectorAll('.modal-card p')[3].textContent = t.aboutP4;
+      document.querySelectorAll('.modal-card p')[4].innerHTML = t.aboutContact + '<a href="mailto:ahua2020@qq.com" style="color:var(--accent-blue);text-decoration:none">ahua2020@qq.com</a>';
+      // re-render entries with translated category names
+      renderEntries();
+      renderSidebar();
+    }
+
+    function toggleLang() {
+      currentLang = currentLang === 'zh' ? 'en' : 'zh';
+      localStorage.setItem('lang', currentLang);
+      applyLang();
+    }
+
+    function applyTheme() {
+      document.documentElement.setAttribute('data-theme', currentTheme);
+      document.getElementById('themeToggle').textContent = currentTheme === 'dark' ? '☀️' : '🌙';
+    }
+
+    function toggleTheme() {
+      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('theme', currentTheme);
+      applyTheme();
+    }
+
+    applyTheme();
+    applyLang();
   </script>
 </body>
 </html>
