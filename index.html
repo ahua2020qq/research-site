@@ -563,6 +563,14 @@
       });
 
       document.getElementById('countAll').textContent = siteData.entries.length;
+
+      document.querySelector('[data-category="all"]').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        currentCategory = 'all';
+        renderEntries();
+      });
     }
 
     function renderStats() {
