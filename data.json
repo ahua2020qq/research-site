@@ -6,11 +6,36 @@
     "githubRepo": "ahua2020qq/research-site"
   },
   "categories": [
-    { "id": "ai-research", "name": "AI研究", "icon": "🤖", "color": "#8B5CF6" },
-    { "id": "financial", "name": "金融数据", "icon": "📈", "color": "#10B981" },
-    { "id": "engineering", "name": "工程实践", "icon": "⚙️", "color": "#3B82F6" },
-    { "id": "reports", "name": "分析报告", "icon": "📊", "color": "#F59E0B" },
-    { "id": "other", "name": "其他", "icon": "📚", "color": "#6B7280" }
+    {
+      "id": "ai-research",
+      "name": "AI研究",
+      "icon": "🤖",
+      "color": "#8B5CF6"
+    },
+    {
+      "id": "financial",
+      "name": "金融数据",
+      "icon": "📈",
+      "color": "#10B981"
+    },
+    {
+      "id": "engineering",
+      "name": "工程实践",
+      "icon": "⚙️",
+      "color": "#3B82F6"
+    },
+    {
+      "id": "reports",
+      "name": "分析报告",
+      "icon": "📊",
+      "color": "#F59E0B"
+    },
+    {
+      "id": "other",
+      "name": "其他",
+      "icon": "📚",
+      "color": "#6B7280"
+    }
   ],
   "entries": [
     {
@@ -20,7 +45,21 @@
       "date": "2026-04-19",
       "description": "完整的SDD范式深度研究，涵盖核心理念、工程流程、24周落地路线图、五支柱验证框架",
       "file": "articles/sdd-engineering-guide.html",
-      "tags": ["SDD", "规范驱动", "工程实践", "AI"]
+      "tags": [
+        "SDD",
+        "规范驱动",
+        "工程实践",
+        "AI"
+      ]
+    },
+    {
+      "id": "workbuddy等桌面现代应用对比分析",
+      "title": "workbuddy等桌面现代应用对比分析",
+      "category": "ai-research",
+      "date": "2026-04-19",
+      "description": "WorkBuddy · QoderWork · ArkClaw · 元气AI Bot · 小艺Claw\n基于2026年4月最新迭代数据，追踪各产品版本演进与功能变化",
+      "file": "articles/ai-agent-comparison-v2.html",
+      "tags": []
     }
   ]
 }
