@@ -60,6 +60,15 @@
       "description": "WorkBuddy · QoderWork · ArkClaw · 元气AI Bot · 小艺Claw\n基于2026年4月最新迭代数据，追踪各产品版本演进与功能变化",
       "file": "articles/ai-agent-comparison-v2.html",
       "tags": []
+    },
+    {
+      "id": "bank-performance-2025",
+      "title": "上市银行2025年度业绩发布会 · AI与金融科技专题",
+      "category": "financial",
+      "date": "2025-04-03",
+      "description": "上市银行2025年报季业绩发布会梳理，聚焦AI应用与金融科技转型战略",
+      "file": "articles/bank-performance.html",
+      "tags": ["银行", "金融科技", "AI", "业绩分析"]
     }
   ]
 }
