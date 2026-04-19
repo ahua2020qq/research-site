@@ -69,6 +69,15 @@
       "description": "上市银行2025年报季业绩发布会梳理，聚焦AI应用与金融科技转型战略",
       "file": "articles/bank-performance.html",
       "tags": ["银行", "金融科技", "AI", "业绩分析"]
+    },
+    {
+      "id": "subagents-stats-report",
+      "title": "Subagents 运行统计报告 — 70 Agent 并行实测",
+      "category": "engineering",
+      "date": "2026-03-23",
+      "description": "银行系统开发场景下70个Subagent并行运行的全景统计，含Token消耗、工具调用、运行时长甘特图、散点图分析",
+      "file": "articles/subagents_report.html",
+      "tags": ["Subagents", "GLM", "多Agent", "性能分析", "可视化"]
     }
   ]
 }

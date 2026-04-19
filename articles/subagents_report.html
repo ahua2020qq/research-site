@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subagents 运行统计报告</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #0f1117;
+  color: #e2e8f0;
+  min-height: 100vh;
+}
+.header {
+  background: linear-gradient(135deg, #1a1f35 0%, #0d1424 100%);
+  border-bottom: 1px solid #2d3748;
+  padding: 24px 36px;
+}
+.header h1 { font-size: 20px; font-weight: 700; color: #fff; }
+.header p { font-size: 12px; color: #718096; margin-top: 4px; }
+.header-meta { display: flex; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
+.header-badge {
+  background: #1e2a40; border: 1px solid #2d3a52; border-radius: 20px;
+  padding: 3px 12px; font-size: 11px; color: #a0aec0;
+}
+.header-badge span { color: #63b3ed; font-weight: 600; }
+.container { max-width: 1400px; margin: 0 auto; padding: 28px 36px; }
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+@media(max-width:1100px){ .kpi-grid { grid-template-columns: repeat(3,1fr); } }
+@media(max-width:700px){ .kpi-grid { grid-template-columns: repeat(2,1fr); } }
+.kpi-card {
+  background: #141a2b; border: 1px solid #2d3748; border-radius: 10px;
+  padding: 16px 18px;
+}
+.kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #718096; margin-bottom: 6px; }
+.kpi-value { font-size: 26px; font-weight: 700; line-height: 1.1; }
+.kpi-sub { font-size: 11px; color: #4a5568; margin-top: 4px; }
+.c-blue { color: #63b3ed; } .c-green { color: #68d391; } .c-teal { color: #4fd1c7; }
+.c-purple { color: #b794f4; } .c-orange { color: #f6ad55; } .c-pink { color: #fc8181; }
+.section-title {
+  font-size: 13px; font-weight: 600; color: #718096; margin: 24px 0 14px;
+  display: flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 0.8px;
+}
+.section-title::after { content:''; flex:1; height:1px; background:#2d3748; }
+.charts-row { display: grid; gap: 16px; margin-bottom: 16px; }
+.charts-row.col-3-1 { grid-template-columns: 3fr 1.2fr; }
+.charts-row.col-2 { grid-template-columns: 1fr 1fr; }
+@media(max-width:900px){ .charts-row.col-3-1, .charts-row.col-2 { grid-template-columns: 1fr; } }
+.chart-card {
+  background: #141a2b; border: 1px solid #2d3748; border-radius: 10px; padding: 20px;
+}
+.chart-title {
+  font-size: 12px; font-weight: 600; color: #718096; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 7px;
+}
+.dot { width:7px; height:7px; border-radius:50%; display:inline-block; flex-shrink:0; }
+canvas { display: block; }
+
+/* Gantt */
+.gantt-date-group { margin-bottom: 18px; }
+.gantt-date-label {
+  font-size: 11px; color: #4a5568; text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 8px; padding: 3px 8px; background: #1a2035; border-radius: 4px;
+  display: inline-block;
+}
+.gantt-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.gantt-label {
+  width: 160px; flex-shrink: 0; font-size: 11px; color: #a0aec0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.gantt-track {
+  flex: 1; height: 18px; background: #1e2535; border-radius: 3px;
+  position: relative; overflow: hidden;
+}
+.gantt-fill {
+  height: 100%; border-radius: 3px; position: absolute;
+  display: flex; align-items: center; padding-left: 5px;
+  font-size: 9px; color: rgba(255,255,255,0.75); white-space: nowrap; overflow: hidden;
+}
+.gantt-dur { width: 44px; text-align: right; font-size: 11px; color: #4a5568; flex-shrink: 0; }
+
+/* Table */
+.table-card { background: #141a2b; border: 1px solid #2d3748; border-radius: 10px; overflow: hidden; margin-bottom: 28px; }
+.table-toolbar {
+  padding: 14px 20px; border-bottom: 1px solid #2d3748;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.table-toolbar-title { font-size: 13px; font-weight: 600; color: #a0aec0; }
+.search-box {
+  background: #1a2035; border: 1px solid #2d3748; border-radius: 7px;
+  padding: 6px 12px; color: #e2e8f0; font-size: 12px; outline: none; width: 220px;
+}
+.search-box:focus { border-color: #4299e1; }
+.search-box::placeholder { color: #4a5568; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  padding: 9px 14px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.7px;
+  color: #4a5568; border-bottom: 1px solid #2d3748; text-align: left;
+  cursor: pointer; user-select: none; white-space: nowrap;
+}
+thead th:hover { color: #a0aec0; }
+tbody tr { border-bottom: 1px solid #1a2030; transition: background .12s; }
+tbody tr:hover { background: #1a2035; }
+tbody td { padding: 10px 14px; font-size: 12px; color: #cbd5e0; }
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 500;
+}
+.badge-gp { background: #1e3a5f; color: #63b3ed; }
+.badge-ex { background: #2d1b4e; color: #b794f4; }
+.mini-bar-wrap { display: flex; align-items: center; gap: 5px; }
+.mini-bar { height: 5px; border-radius: 2px; flex-shrink: 0; }
+.hi { color: #f6ad55; font-weight: 600; }
+.pagination {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 20px; border-top: 1px solid #2d3748; font-size: 11px; color: #4a5568;
+}
+.page-btns { display: flex; gap: 5px; }
+.pbtn {
+  background: #1a2035; border: 1px solid #2d3748; border-radius: 5px;
+  padding: 3px 10px; color: #a0aec0; cursor: pointer; font-size: 11px;
+}
+.pbtn:hover { background: #2d3a52; }
+.pbtn.act { background: #2b6cb0; border-color: #3182ce; color: #fff; }
+.pbtn:disabled { opacity: 0.3; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🤖 Subagents 运行统计报告</h1>
+  <p>数据来源：D:\zhipu\cp · 会话 620eb411-293a-48d0-966d-4f8cb8236eda</p>
+  <div class="header-meta">
+    <div class="header-badge">项目 <span>douya-platform</span></div>
+    <div class="header-badge">模型 <span>glm-4.7</span></div>
+    <div class="header-badge">统计时间 <span>2026-03-23</span></div>
+    <div class="header-badge">工具 <span>Claude CLI v2.1.78</span></div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <div class="section-title">Token 消耗分析</div>
+  <div class="charts-row col-3-1">
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot" style="background:#63b3ed"></span>Top 20 Agent — Token 消耗（输入 + 输出，按总量排序）</div>
+      <canvas id="cToken" height="300"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot" style="background:#b794f4"></span>Agent 类型分布</div>
+      <canvas id="cDonut" width="220" height="220"></canvas>
+      <div id="donutLegend" style="margin-top:12px;display:flex;flex-direction:column;gap:6px;padding:0 10px"></div>
+    </div>
+  </div>
+
+  <div class="charts-row col-2">
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot" style="background:#68d391"></span>Agent 启动时间分布（北京时间，小时）</div>
+      <canvas id="cHourly" height="200"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot" style="background:#f6ad55"></span>工具调用次数 vs 消息总数（散点图）</div>
+      <canvas id="cScatter" height="200"></canvas>
+    </div>
+  </div>
+
+  <div class="section-title">运行时长甘特图</div>
+  <div class="chart-card" style="margin-bottom:28px">
+    <div id="ganttWrap"></div>
+  </div>
+
+  <div class="section-title">Agent 详细列表</div>
+  <div class="table-card">
+    <div class="table-toolbar">
+      <span class="table-toolbar-title">全部 Agent（70 个）</span>
+      <input class="search-box" id="searchBox" placeholder="搜索描述 / ID / 类型…" oninput="filterTable()">
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortBy('idx')">#</th>
+            <th onclick="sortBy('id')">ID</th>
+            <th onclick="sortBy('description')">任务描述</th>
+            <th onclick="sortBy('agentType')">类型</th>
+            <th onclick="sortBy('startTime')">开始时间 ↕</th>
+            <th onclick="sortBy('duration')">耗时 ↕</th>
+            <th onclick="sortBy('inputTokens')">输入Token ↕</th>
+            <th onclick="sortBy('outputTokens')">输出Token ↕</th>
+            <th onclick="sortBy('toolCalls')">工具调用 ↕</th>
+            <th onclick="sortBy('messageCount')">消息数 ↕</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <span id="pgInfo"></span>
+      <div class="page-btns" id="pgBtns"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const META = [{"id":"a01ec5ad63df83752","agentType":"general-purpose","description":"修复customer服务所有剩余测试"},{"id":"a01ed16b190593951","agentType":"general-purpose","description":"修复所有Logger使用问题"},{"id":"a05ac0b85f9043392","agentType":"general-purpose","description":"配置数据库和Prisma ORM"},{"id":"a0938ec9b7ff6d90e","agentType":"general-purpose","description":"修复所有controller测试导入路径"},{"id":"a0ca6e4ab1f5f56e4","agentType":"general-purpose","description":"性能测试工程师"},{"id":"a0d1f4c4086ceb266","agentType":"general-purpose","description":"前端构建专家"},{"id":"a11e3fa15c3a18ad2","agentType":"general-purpose","description":"修复剩余编译错误和测试失败"},{"id":"a14d6493ba95e7520","agentType":"general-purpose","description":"会计API开发专家"},{"id":"a18066ec020c85575","agentType":"general-purpose","description":"运行并修复测试"},{"id":"a1de8a86063906359","agentType":"general-purpose","description":"前端架构专家"},{"id":"a1edfdb865807fba1","agentType":"general-purpose","description":"设计客户管理Prisma Schema"},{"id":"a23aba57e1d036857","agentType":"general-purpose","description":"安全测试工程师"},{"id":"a26c01d802e379112","agentType":"general-purpose","description":"搭建NestJS微服务框架"},{"id":"a33985e1f1594d65d","agentType":"Explore","description":"深度分析资产转移业务逻辑"},{"id":"a3dcd26a58ff6ce62","agentType":"general-purpose","description":"修复customer测试导入路径"},{"id":"a43ca72c43192654d","agentType":"general-purpose","description":"实现RESTful API端点"},{"id":"a444cf0f3b3f9cab5","agentType":"general-purpose","description":"实现认证核心业务逻辑"},{"id":"a54f4f5115e56661e","agentType":"general-purpose","description":"Fix audit interceptor tests"},{"id":"a59a3799687910215","agentType":"general-purpose","description":"授信管理专家"},{"id":"a5b55b28af797d435","agentType":"general-purpose","description":"配置开发工具和CI/CD"},{"id":"a5e7254acb61f8907","agentType":"general-purpose","description":"批量修复auth服务测试错误"},{"id":"a5ecec0a0bbf97c6e","agentType":"general-purpose","description":"会计核心业务专家"},{"id":"a5ee5c0d207277cb0","agentType":"general-purpose","description":"多币种汇率专家"},{"id":"a6060057b8abc20a8","agentType":"general-purpose","description":"信用管理深度业务分析"},{"id":"a621a0b7a6f3fce17","agentType":"general-purpose","description":"会计测试工程师"},{"id":"a642f9144f8b1b415","agentType":"general-purpose","description":"修复贷款服务单元测试"},{"id":"a64edf98ff0ab61dd","agentType":"general-purpose","description":"修复customer测试schema不匹配"},{"id":"a6a488e872f3123b1","agentType":"Explore","description":"分析原系统功能模块"},{"id":"a6b0cf835e17f9562","agentType":"general-purpose","description":"实现客户核心业务逻辑"},{"id":"a6c1161ba816e21ac","agentType":"general-purpose","description":"贷款管理专家"},{"id":"a6e4cba5f3c59013c","agentType":"general-purpose","description":"UI组件库专家"},{"id":"a7715be3600017f90","agentType":"general-purpose","description":"修复Customer服务最后1个失败测试"},{"id":"a778195634815ea02","agentType":"general-purpose","description":"修复Accounting服务测试"},{"id":"a8371ea8b491f25d3","agentType":"general-purpose","description":"初始化Next.js前端应用"},{"id":"a83f812493fb38a0b","agentType":"Explore","description":"深度分析客户管理业务逻辑"},{"id":"a84f3267f524b995e","agentType":"general-purpose","description":"实现RBAC权限控制系统"},{"id":"a8d2cd28044c65772","agentType":"general-purpose","description":"实现客户关系管理"},{"id":"a946cfb2791b11a08","agentType":"general-purpose","description":"设计Prisma数据库Schema"},{"id":"a96af02fe869c4fcc","agentType":"general-purpose","description":"修复auth.service.ts类型错误"},{"id":"a990343c28348299d","agentType":"general-purpose","description":"容器化部署工程师"},{"id":"a9c1d22d0c93c603c","agentType":"general-purpose","description":"修复认证服务单元测试"},{"id":"aa0e04a8469e0fa5b","agentType":"general-purpose","description":"修复所有auth服务测试编译错误"},{"id":"aa72b58c623fc665e","agentType":"general-purpose","description":"页面开发专家"},{"id":"aa8b84829352b76e5","agentType":"general-purpose","description":"信用评估专家"},{"id":"ab5025279f9b99038","agentType":"general-purpose","description":"实现客户数据分析功能"},{"id":"ab515d91e5b483537","agentType":"general-purpose","description":"修复风险服务单元测试"},{"id":"ab6cf56e56fa5def2","agentType":"general-purpose","description":"修复relationship服务所有问题"},{"id":"ab85131327de52414","agentType":"general-purpose","description":"前端测试专家"},{"id":"ab93822b7c0398c37","agentType":"general-purpose","description":"修复Auth服务17个失败测试到100%"},{"id":"abc65966d822aef6b","agentType":"general-purpose","description":"修复Accounting报表测试"},{"id":"abf8216479650c3b9","agentType":"general-purpose","description":"财务报表专家"},{"id":"ac03bae3f898dd6bb","agentType":"general-purpose","description":"会计数据库架构师"},{"id":"ac31b60e5c8f19617","agentType":"general-purpose","description":"前端测试修复"},{"id":"ac4b398deff311b08","agentType":"general-purpose","description":"信用测试工程师"},{"id":"ac556680e19029f19","agentType":"general-purpose","description":"修复analytics服务字段名问题"},{"id":"ac78a66c421550b72","agentType":"general-purpose","description":"继续修复Auth服务剩余11个失败测试"},{"id":"ac853ea2162ce2301","agentType":"general-purpose","description":"E2E测试工程师"},{"id":"acc03afec6c0bc0c8","agentType":"Explore","description":"深度分析会计核算业务逻辑"},{"id":"acdeda90d39f45e20","agentType":"Explore","description":"深度分析信用管理业务逻辑"},{"id":"ace32f0de4f6e4beb","agentType":"general-purpose","description":"修复会计服务单元测试"},{"id":"ad1c1c29689a474a5","agentType":"general-purpose","description":"状态管理专家"},{"id":"ad2ce33a5e9cbc67e","agentType":"general-purpose","description":"编写完整测试套件"},{"id":"ad8361e324163d153","agentType":"general-purpose","description":"信用数据库架构师"},{"id":"adfe6903317ef5e72","agentType":"general-purpose","description":"系统集成测试工程师"},{"id":"ae23134df88dc7ade","agentType":"general-purpose","description":"初始化Monorepo项目结构"},{"id":"ae25527582e2863c3","agentType":"general-purpose","description":"编写客户服务测试套件"},{"id":"ae2d06562fddeeb37","agentType":"general-purpose","description":"风险控制专家"},{"id":"aea7e7c477fe46466","agentType":"general-purpose","description":"CI/CD工程师"},{"id":"afe4514bb0f539b9a","agentType":"general-purpose","description":"实现客户管理API端点"},{"id":"afe6de60f4790f91e","agentType":"general-purpose","description":"实现审计日志系统"}];
+
+const STATS = [{"id":"a01ec5ad63df83752","startTime":"2026-03-21T08:52:20.927Z","endTime":"2026-03-21T08:56:00.521Z","inputTokens":351711,"outputTokens":10483,"toolCalls":41,"messageCount":130},{"id":"a01ed16b190593951","startTime":"2026-03-21T07:43:00.818Z","endTime":"2026-03-21T07:45:25.615Z","inputTokens":169656,"outputTokens":10784,"toolCalls":89,"messageCount":270},{"id":"a05ac0b85f9043392","startTime":"2026-03-20T16:18:32.511Z","endTime":"2026-03-20T16:23:19.762Z","inputTokens":329088,"outputTokens":22660,"toolCalls":55,"messageCount":166},{"id":"a0938ec9b7ff6d90e","startTime":"2026-03-21T09:22:17.518Z","endTime":"2026-03-21T09:26:11.082Z","inputTokens":72563,"outputTokens":5781,"toolCalls":40,"messageCount":123},{"id":"a0ca6e4ab1f5f56e4","startTime":"2026-03-20T18:48:03.93Z","endTime":"2026-03-20T18:57:07.25Z","inputTokens":168019,"outputTokens":47032,"toolCalls":85,"messageCount":230},{"id":"a0d1f4c4086ceb266","startTime":"2026-03-20T18:26:58.631Z","endTime":"2026-03-20T18:31:09.071Z","inputTokens":48469,"outputTokens":25416,"toolCalls":64,"messageCount":204},{"id":"a11e3fa15c3a18ad2","startTime":"2026-03-21T07:47:57.019Z","endTime":"2026-03-21T07:51:48.763Z","inputTokens":285326,"outputTokens":5841,"toolCalls":49,"messageCount":159},{"id":"a14d6493ba95e7520","startTime":"2026-03-20T17:38:02.105Z","endTime":"2026-03-20T17:46:51.194Z","inputTokens":148674,"outputTokens":40431,"toolCalls":64,"messageCount":194},{"id":"a18066ec020c85575","startTime":"2026-03-20T19:11:51.199Z","endTime":"2026-03-20T19:27:13.399Z","inputTokens":99149,"outputTokens":13837,"toolCalls":84,"messageCount":268},{"id":"a1de8a86063906359","startTime":"2026-03-20T18:26:58.627Z","endTime":"2026-03-20T18:33:03.849Z","inputTokens":33890,"outputTokens":45240,"toolCalls":23,"messageCount":69},{"id":"a1edfdb865807fba1","startTime":"2026-03-20T17:26:15.118Z","endTime":"2026-03-20T17:32:13.309Z","inputTokens":78521,"outputTokens":31438,"toolCalls":22,"messageCount":68},{"id":"a23aba57e1d036857","startTime":"2026-03-20T18:48:03.931Z","endTime":"2026-03-20T18:55:54.55Z","inputTokens":295159,"outputTokens":45814,"toolCalls":44,"messageCount":134},{"id":"a26c01d802e379112","startTime":"2026-03-20T16:18:32.509Z","endTime":"2026-03-20T16:22:47.971Z","inputTokens":102002,"outputTokens":20687,"toolCalls":49,"messageCount":164},{"id":"a33985e1f1594d65d","startTime":"2026-03-20T16:35:48.114Z","endTime":"2026-03-20T16:39:00.148Z","inputTokens":130675,"outputTokens":19460,"toolCalls":27,"messageCount":86},{"id":"a3dcd26a58ff6ce62","startTime":"2026-03-21T08:05:30.619Z","endTime":"2026-03-21T08:07:13.915Z","inputTokens":247313,"outputTokens":1488,"toolCalls":24,"messageCount":80},{"id":"a43ca72c43192654d","startTime":"2026-03-20T17:10:02.908Z","endTime":"2026-03-20T17:17:19.19Z","inputTokens":129899,"outputTokens":33713,"toolCalls":68,"messageCount":192},{"id":"a444cf0f3b3f9cab5","startTime":"2026-03-20T17:10:02.904Z","endTime":"2026-03-20T17:15:48.481Z","inputTokens":170137,"outputTokens":32017,"toolCalls":43,"messageCount":130},{"id":"a54f4f5115e56661e","startTime":"2026-03-21T11:51:13.547Z","endTime":"2026-03-21T11:51:45.408Z","inputTokens":33066,"outputTokens":2822,"toolCalls":11,"messageCount":38},{"id":"a59a3799687910215","startTime":"2026-03-20T18:05:21.453Z","endTime":"2026-03-20T18:12:42.693Z","inputTokens":134608,"outputTokens":43853,"toolCalls":43,"messageCount":145},{"id":"a5b55b28af797d435","startTime":"2026-03-20T16:18:32.511Z","endTime":"2026-03-20T16:22:43.9Z","inputTokens":204169,"outputTokens":15587,"toolCalls":104,"messageCount":305},{"id":"a5e7254acb61f8907","startTime":"2026-03-21T07:34:51.747Z","endTime":"2026-03-21T07:36:28.513Z","inputTokens":164100,"outputTokens":4871,"toolCalls":27,"messageCount":98},{"id":"a5ecec0a0bbf97c6e","startTime":"2026-03-20T17:38:02.104Z","endTime":"2026-03-20T17:48:40.805Z","inputTokens":91686,"outputTokens":52029,"toolCalls":34,"messageCount":107},{"id":"a5ee5c0d207277cb0","startTime":"2026-03-20T17:38:02.105Z","endTime":"2026-03-20T17:44:20.42Z","inputTokens":63796,"outputTokens":49995,"toolCalls":40,"messageCount":124},{"id":"a6060057b8abc20a8","startTime":"2026-03-20T16:43:46.651Z","endTime":"2026-03-20T16:50:20.999Z","inputTokens":88258,"outputTokens":16255,"toolCalls":44,"messageCount":110},{"id":"a621a0b7a6f3fce17","startTime":"2026-03-20T17:38:02.106Z","endTime":"2026-03-20T17:52:31.564Z","inputTokens":169777,"outputTokens":59307,"toolCalls":41,"messageCount":125},{"id":"a642f9144f8b1b415","startTime":"2026-03-20T19:11:51.196Z","endTime":"2026-03-20T19:16:59.782Z","inputTokens":249489,"outputTokens":32113,"toolCalls":39,"messageCount":116},{"id":"a64edf98ff0ab61dd","startTime":"2026-03-21T08:09:34.31Z","endTime":"2026-03-21T08:34:07.342Z","inputTokens":534386,"outputTokens":15248,"toolCalls":72,"messageCount":249},{"id":"a6a488e872f3123b1","startTime":"2026-03-20T16:27:17.489Z","endTime":"2026-03-20T16:30:50.685Z","inputTokens":185860,"outputTokens":8136,"toolCalls":40,"messageCount":95},{"id":"a6b0cf835e17f9562","startTime":"2026-03-20T17:26:15.152Z","endTime":"2026-03-20T17:34:01.425Z","inputTokens":180933,"outputTokens":44114,"toolCalls":75,"messageCount":188},{"id":"a6c1161ba816e21ac","startTime":"2026-03-20T18:05:21.453Z","endTime":"2026-03-20T18:13:56.158Z","inputTokens":151765,"outputTokens":50865,"toolCalls":36,"messageCount":116},{"id":"a6e4cba5f3c59013c","startTime":"2026-03-20T18:26:58.629Z","endTime":"2026-03-20T18:34:24.397Z","inputTokens":96828,"outputTokens":50296,"toolCalls":65,"messageCount":209},{"id":"a7715be3600017f90","startTime":"2026-03-21T11:01:15.533Z","endTime":"2026-03-21T11:06:53.052Z","inputTokens":14909,"outputTokens":1693,"toolCalls":14,"messageCount":45},{"id":"a778195634815ea02","startTime":"2026-03-21T10:39:39.019Z","endTime":"2026-03-21T10:43:13.886Z","inputTokens":191170,"outputTokens":17179,"toolCalls":89,"messageCount":270},{"id":"a8371ea8b491f25d3","startTime":"2026-03-20T16:18:32.51Z","endTime":"2026-03-20T16:18:49.65Z","inputTokens":19673,"outputTokens":652,"toolCalls":9,"messageCount":26},{"id":"a83f812493fb38a0b","startTime":"2026-03-20T16:35:48.113Z","endTime":"2026-03-20T16:39:08.061Z","inputTokens":189077,"outputTokens":5570,"toolCalls":20,"messageCount":69},{"id":"a84f3267f524b995e","startTime":"2026-03-20T17:10:02.906Z","endTime":"2026-03-20T17:15:21.564Z","inputTokens":205725,"outputTokens":27947,"toolCalls":40,"messageCount":124},{"id":"a8d2cd28044c65772","startTime":"2026-03-20T17:26:15.152Z","endTime":"2026-03-20T17:31:35.655Z","inputTokens":49960,"outputTokens":27594,"toolCalls":36,"messageCount":118},{"id":"a946cfb2791b11a08","startTime":"2026-03-20T17:10:02.895Z","endTime":"2026-03-20T17:14:18.677Z","inputTokens":75220,"outputTokens":23345,"toolCalls":25,"messageCount":77},{"id":"a96af02fe869c4fcc","startTime":"2026-03-21T07:57:31.067Z","endTime":"2026-03-21T08:01:50.794Z","inputTokens":34435,"outputTokens":1599,"toolCalls":10,"messageCount":36},{"id":"a990343c28348299d","startTime":"2026-03-20T18:48:03.931Z","endTime":"2026-03-20T18:58:12.876Z","inputTokens":76534,"outputTokens":41096,"toolCalls":94,"messageCount":237},{"id":"a9c1d22d0c93c603c","startTime":"2026-03-20T19:11:51.189Z","endTime":"2026-03-20T19:21:29.945Z","inputTokens":388042,"outputTokens":28894,"toolCalls":47,"messageCount":135},{"id":"aa0e04a8469e0fa5b","startTime":"2026-03-21T07:38:02.42Z","endTime":"2026-03-21T07:41:26.256Z","inputTokens":422339,"outputTokens":11873,"toolCalls":83,"messageCount":261},{"id":"aa72b58c623fc665e","startTime":"2026-03-20T18:26:58.629Z","endTime":"2026-03-20T18:32:57.565Z","inputTokens":187245,"outputTokens":44069,"toolCalls":40,"messageCount":129},{"id":"aa8b84829352b76e5","startTime":"2026-03-20T18:05:21.452Z","endTime":"2026-03-20T18:15:36.508Z","inputTokens":517397,"outputTokens":51898,"toolCalls":49,"messageCount":154},{"id":"ab5025279f9b99038","startTime":"2026-03-20T17:26:15.154Z","endTime":"2026-03-20T17:34:39.226Z","inputTokens":182634,"outputTokens":32366,"toolCalls":41,"messageCount":124},{"id":"ab515d91e5b483537","startTime":"2026-03-20T19:11:51.198Z","endTime":"2026-03-20T19:15:33.467Z","inputTokens":54090,"outputTokens":26522,"toolCalls":42,"messageCount":117},{"id":"ab6cf56e56fa5def2","startTime":"2026-03-21T09:03:02.378Z","endTime":"2026-03-21T09:14:22.024Z","inputTokens":171992,"outputTokens":7637,"toolCalls":58,"messageCount":181},{"id":"ab85131327de52414","startTime":"2026-03-20T18:26:58.63Z","endTime":"2026-03-20T18:34:18.493Z","inputTokens":305449,"outputTokens":42305,"toolCalls":87,"messageCount":263},{"id":"ab93822b7c0398c37","startTime":"2026-03-21T11:07:05.383Z","endTime":"2026-03-21T11:31:52.715Z","inputTokens":250172,"outputTokens":12087,"toolCalls":114,"messageCount":333},{"id":"abc65966d822aef6b","startTime":"2026-03-21T10:49:43.873Z","endTime":"2026-03-21T10:54:10.365Z","inputTokens":75636,"outputTokens":4455,"toolCalls":34,"messageCount":110},{"id":"abf8216479650c3b9","startTime":"2026-03-20T17:38:02.104Z","endTime":"2026-03-20T17:54:03.403Z","inputTokens":151160,"outputTokens":49753,"toolCalls":42,"messageCount":127},{"id":"ac03bae3f898dd6bb","startTime":"2026-03-20T17:38:02.1Z","endTime":"2026-03-20T17:53:32.084Z","inputTokens":105109,"outputTokens":41785,"toolCalls":29,"messageCount":85},{"id":"ac31b60e5c8f19617","startTime":"2026-03-20T19:11:51.2Z","endTime":"2026-03-20T19:22:05.713Z","inputTokens":496987,"outputTokens":26828,"toolCalls":104,"messageCount":310},{"id":"ac4b398deff311b08","startTime":"2026-03-20T18:05:21.454Z","endTime":"2026-03-20T18:14:19.682Z","inputTokens":235680,"outputTokens":56049,"toolCalls":43,"messageCount":140},{"id":"ac556680e19029f19","startTime":"2026-03-21T09:15:23.802Z","endTime":"2026-03-21T09:20:53.693Z","inputTokens":176729,"outputTokens":10065,"toolCalls":42,"messageCount":134},{"id":"ac78a66c421550b72","startTime":"2026-03-21T11:33:30.154Z","endTime":"2026-03-21T11:41:05.258Z","inputTokens":338662,"outputTokens":11058,"toolCalls":67,"messageCount":187},{"id":"ac853ea2162ce2301","startTime":"2026-03-20T18:48:03.93Z","endTime":"2026-03-20T18:58:13.708Z","inputTokens":68462,"outputTokens":45848,"toolCalls":55,"messageCount":158},{"id":"acc03afec6c0bc0c8","startTime":"2026-03-20T16:35:48.11Z","endTime":"2026-03-20T16:39:56.865Z","inputTokens":228108,"outputTokens":9948,"toolCalls":31,"messageCount":99},{"id":"acdeda90d39f45e20","startTime":"2026-03-20T16:35:48.112Z","endTime":"2026-03-20T16:41:18.92Z","inputTokens":266698,"outputTokens":11966,"toolCalls":35,"messageCount":115},{"id":"ace32f0de4f6e4beb","startTime":"2026-03-20T19:11:51.194Z","endTime":"2026-03-20T19:19:20.753Z","inputTokens":272045,"outputTokens":37376,"toolCalls":27,"messageCount":91},{"id":"ad1c1c29689a474a5","startTime":"2026-03-20T18:26:58.63Z","endTime":"2026-03-20T18:31:43.57Z","inputTokens":105812,"outputTokens":37488,"toolCalls":51,"messageCount":190},{"id":"ad2ce33a5e9cbc67e","startTime":"2026-03-20T17:10:02.91Z","endTime":"2026-03-20T17:16:29.639Z","inputTokens":126904,"outputTokens":30962,"toolCalls":47,"messageCount":140},{"id":"ad8361e324163d153","startTime":"2026-03-20T18:05:21.45Z","endTime":"2026-03-20T18:16:19.455Z","inputTokens":291817,"outputTokens":64262,"toolCalls":28,"messageCount":80},{"id":"adfe6903317ef5e72","startTime":"2026-03-20T18:48:03.925Z","endTime":"2026-03-20T18:57:36.832Z","inputTokens":319643,"outputTokens":56345,"toolCalls":71,"messageCount":190},{"id":"ae23134df88dc7ade","startTime":"2026-03-20T16:18:32.504Z","endTime":"2026-03-20T16:19:25.915Z","inputTokens":17767,"outputTokens":3777,"toolCalls":32,"messageCount":99},{"id":"ae25527582e2863c3","startTime":"2026-03-20T17:26:15.154Z","endTime":"2026-03-20T17:32:57.665Z","inputTokens":112960,"outputTokens":37478,"toolCalls":65,"messageCount":196},{"id":"ae2d06562fddeeb37","startTime":"2026-03-20T18:05:21.454Z","endTime":"2026-03-20T18:13:44.476Z","inputTokens":140473,"outputTokens":47482,"toolCalls":24,"messageCount":77},{"id":"aea7e7c477fe46466","startTime":"2026-03-20T18:48:03.932Z","endTime":"2026-03-20T18:57:54.749Z","inputTokens":203816,"outputTokens":36969,"toolCalls":50,"messageCount":142},{"id":"afe4514bb0f539b9a","startTime":"2026-03-20T17:26:15.153Z","endTime":"2026-03-20T17:34:40.715Z","inputTokens":229045,"outputTokens":40712,"toolCalls":107,"messageCount":302},{"id":"afe6de60f4790f91e","startTime":"2026-03-20T17:10:02.909Z","endTime":"2026-03-20T17:15:57.135Z","inputTokens":115036,"outputTokens":30629,"toolCalls":61,"messageCount":160}];
+
+// ===== MERGE =====
+const metaMap = {};
+META.forEach(m => metaMap[m.id] = m);
+const agents = STATS.map((s, i) => {
+  const m = metaMap[s.id] || {};
+  const st = new Date(s.startTime), et = new Date(s.endTime);
+  return {
+    idx: i+1, id: s.id, description: m.description||'-', agentType: m.agentType||'general-purpose',
+    startTime: st, endTime: et, duration: Math.round((et-st)/1000),
+    inputTokens: s.inputTokens, outputTokens: s.outputTokens,
+    totalTokens: s.inputTokens+s.outputTokens,
+    toolCalls: s.toolCalls, messageCount: s.messageCount
+  };
+});
+
+// ===== HELPERS =====
+function fmtN(n) {
+  if (n>=1e6) return (n/1e6).toFixed(2)+'M';
+  if (n>=1000) return (n/1000).toFixed(1)+'K';
+  return String(n);
+}
+function fmtD(s) {
+  if (s<60) return s+'s';
+  return `${Math.floor(s/60)}m ${s%60}s`;
+}
+
+// ===== KPI =====
+const totalIn = agents.reduce((a,b)=>a+b.inputTokens,0);
+const totalOut = agents.reduce((a,b)=>a+b.outputTokens,0);
+const totalTools = agents.reduce((a,b)=>a+b.toolCalls,0);
+const totalMsgs = agents.reduce((a,b)=>a+b.messageCount,0);
+const avgDur = Math.round(agents.reduce((a,b)=>a+b.duration,0)/agents.length);
+const maxDur = Math.max(...agents.map(a=>a.duration));
+const maxTok = Math.max(...agents.map(a=>a.totalTokens));
+
+const kpis = [
+  {label:'Agent 总数', val:'70', sub:'Explore:5 / General:65', c:'c-blue'},
+  {label:'输入 Token 总计', val:fmtN(totalIn), sub:`均 ${fmtN(Math.round(totalIn/70))}/agent`, c:'c-green'},
+  {label:'输出 Token 总计', val:fmtN(totalOut), sub:`均 ${fmtN(Math.round(totalOut/70))}/agent`, c:'c-teal'},
+  {label:'总 Token 消耗', val:fmtN(totalIn+totalOut), sub:`最大 ${fmtN(maxTok)}`, c:'c-purple'},
+  {label:'工具调用总计', val:fmtN(totalTools), sub:`均 ${Math.round(totalTools/70)}/agent`, c:'c-orange'},
+  {label:'平均运行时长', val:fmtD(avgDur), sub:`最长 ${fmtD(maxDur)}`, c:'c-pink'},
+];
+document.getElementById('kpiGrid').innerHTML = kpis.map(k =>
+  `<div class="kpi-card"><div class="kpi-label">${k.label}</div><div class="kpi-value ${k.c}">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`
+).join('');
+
+// ===== CANVAS UTILS =====
+function setupCanvas(id, w, h) {
+  const canvas = document.getElementById(id);
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  return {ctx, w, h};
+}
+
+function fitText(ctx, text, maxW) {
+  let t = text;
+  while (ctx.measureText(t).width > maxW && t.length > 3) t = t.slice(0,-1);
+  return t.length < text.length ? t+'…' : t;
+}
+
+// ===== TOKEN BAR CHART =====
+(function drawTokenBar() {
+  const top = [...agents].sort((a,b)=>b.totalTokens-a.totalTokens).slice(0,20);
+  const PAD = {l:130, r:20, t:20, b:30};
+  const W = document.querySelector('.chart-card').clientWidth - 40 || 700;
+  const H = 300;
+  const {ctx, w, h} = setupCanvas('cToken', W, H);
+  const chartW = w - PAD.l - PAD.r;
+  const chartH = h - PAD.t - PAD.b;
+  const maxVal = top[0].totalTokens;
+  const barH = Math.floor(chartH / top.length) - 2;
+
+  ctx.fillStyle = '#1e2535';
+  ctx.fillRect(0, 0, w, h);
+
+  // gridlines
+  for (let i=0;i<=4;i++) {
+    const x = PAD.l + chartW * i/4;
+    ctx.strokeStyle = '#2d3748'; ctx.lineWidth = 0.5;
+    ctx.beginPath(); ctx.moveTo(x, PAD.t); ctx.lineTo(x, PAD.t+chartH); ctx.stroke();
+    ctx.fillStyle = '#4a5568'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(fmtN(maxVal*i/4), x, PAD.t+chartH+14);
+  }
+
+  top.forEach((a, i) => {
+    const y = PAD.t + i * (chartH/top.length);
+    const inW = Math.round(a.inputTokens / maxVal * chartW);
+    const outW = Math.round(a.outputTokens / maxVal * chartW);
+    const bh = Math.max(barH-2, 4);
+
+    // input
+    const grad1 = ctx.createLinearGradient(PAD.l, 0, PAD.l+inW, 0);
+    grad1.addColorStop(0, '#2b6cb0'); grad1.addColorStop(1, '#3182ce');
+    ctx.fillStyle = grad1;
+    ctx.fillRect(PAD.l, y+1, inW, Math.floor(bh*0.55));
+
+    // output
+    const grad2 = ctx.createLinearGradient(PAD.l, 0, PAD.l+outW, 0);
+    grad2.addColorStop(0, '#2c7a7b'); grad2.addColorStop(1, '#319795');
+    ctx.fillStyle = grad2;
+    ctx.fillRect(PAD.l, y+Math.floor(bh*0.55)+2, outW, Math.floor(bh*0.45));
+
+    // label
+    ctx.fillStyle = '#a0aec0'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    const shortDesc = fitText(ctx, a.description, PAD.l-8);
+    ctx.fillText(shortDesc, PAD.l-4, y + bh/2 + 4);
+
+    // total label
+    if (inW + outW > 30) {
+      ctx.fillStyle = '#718096'; ctx.font = '9px sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText(fmtN(a.totalTokens), PAD.l + Math.max(inW, outW) + 3, y + bh/2 + 4);
+    }
+  });
+
+  // legend
+  const lx = PAD.l + chartW - 180;
+  ctx.fillStyle = '#2b6cb0'; ctx.fillRect(lx, 4, 10, 8);
+  ctx.fillStyle = '#a0aec0'; ctx.font = '10px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('输入Token', lx+13, 12);
+  ctx.fillStyle = '#2c7a7b'; ctx.fillRect(lx+80, 4, 10, 8);
+  ctx.fillText('输出Token', lx+93, 12);
+})();
+
+// ===== DONUT =====
+(function drawDonut() {
+  const W = 220, H = 220;
+  const {ctx, w, h} = setupCanvas('cDonut', W, H);
+  const types = {}, colors = {'general-purpose':'#2b6cb0','Explore':'#6b46c1'};
+  agents.forEach(a => { types[a.agentType] = (types[a.agentType]||0)+1; });
+  const entries = Object.entries(types);
+  const total = entries.reduce((s,[,v])=>s+v, 0);
+  const cx = w/2, cy = h/2, R = 80, r = 52;
+  let angle = -Math.PI/2;
+  entries.forEach(([k,v]) => {
+    const sweep = (v/total)*2*Math.PI;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,R,angle,angle+sweep); ctx.closePath();
+    ctx.fillStyle = colors[k]||'#718096'; ctx.fill();
+    ctx.strokeStyle='#141a2b'; ctx.lineWidth=2; ctx.stroke();
+    angle += sweep;
+  });
+  // hole
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI);
+  ctx.fillStyle='#141a2b'; ctx.fill();
+  // center text
+  ctx.fillStyle='#e2e8f0'; ctx.font='bold 24px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(total, cx, cy-8);
+  ctx.fillStyle='#718096'; ctx.font='11px sans-serif'; ctx.fillText('Agents', cx, cy+12);
+
+  // legend
+  const leg = document.getElementById('donutLegend');
+  leg.innerHTML = entries.map(([k,v]) =>
+    `<div style="display:flex;align-items:center;gap:8px;font-size:12px">
+      <span style="width:10px;height:10px;background:${colors[k]||'#718096'};border-radius:2px;flex-shrink:0;display:inline-block"></span>
+      <span style="color:#a0aec0">${k}</span>
+      <span style="margin-left:auto;color:#63b3ed;font-weight:600">${v}</span>
+      <span style="color:#4a5568">(${Math.round(v/total*100)}%)</span>
+    </div>`
+  ).join('');
+})();
+
+// ===== HOURLY BAR =====
+(function drawHourly() {
+  const counts = new Array(24).fill(0);
+  agents.forEach(a => {
+    const h = (a.startTime.getUTCHours() + 8) % 24;
+    counts[h]++;
+  });
+  const maxC = Math.max(...counts);
+  const PAD = {l:30, r:10, t:15, b:30};
+  const el = document.getElementById('cHourly').parentElement;
+  const W = el.clientWidth - 40 || 560;
+  const H = 200;
+  const {ctx, w, h} = setupCanvas('cHourly', W, H);
+  const chartW = w - PAD.l - PAD.r;
+  const chartH = h - PAD.t - PAD.b;
+  const bw = chartW/24 - 2;
+
+  ctx.fillStyle='#1e2535'; ctx.fillRect(0,0,w,h);
+
+  // y gridlines
+  for (let i=0;i<=maxC;i++) {
+    const y = PAD.t + chartH - (i/maxC)*chartH;
+    ctx.strokeStyle='#2d3748'; ctx.lineWidth=0.5;
+    ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(w-PAD.r,y); ctx.stroke();
+    if(i>0){ctx.fillStyle='#4a5568';ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText(i,PAD.l-3,y+3);}
+  }
+
+  counts.forEach((c,i) => {
+    if (!c) return;
+    const x = PAD.l + i*(chartW/24) + 1;
+    const bh = (c/maxC)*chartH;
+    const y = PAD.t + chartH - bh;
+    const grad = ctx.createLinearGradient(0,y,0,y+bh);
+    grad.addColorStop(0,'#2f855a'); grad.addColorStop(1,'#276749');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(x, y, bw, bh, 2);
+    ctx.fill();
+    if (c) {
+      ctx.fillStyle='#68d391'; ctx.font='bold 10px sans-serif'; ctx.textAlign='center';
+      ctx.fillText(c, x+bw/2, y-3);
+    }
+  });
+
+  // x labels every 2 hours
+  for(let i=0;i<24;i+=2){
+    const x = PAD.l + i*(chartW/24) + bw/2;
+    ctx.fillStyle='#4a5568'; ctx.font='9px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(i+':00', x+1, h-PAD.b+14);
+  }
+})();
+
+// ===== SCATTER =====
+(function drawScatter() {
+  const PAD = {l:40, r:20, t:15, b:35};
+  const el = document.getElementById('cScatter').parentElement;
+  const W = el.clientWidth - 40 || 560;
+  const H = 200;
+  const {ctx, w, h} = setupCanvas('cScatter', W, H);
+  const chartW = w-PAD.l-PAD.r, chartH = h-PAD.t-PAD.b;
+  const maxX = Math.max(...agents.map(a=>a.toolCalls));
+  const maxY = Math.max(...agents.map(a=>a.messageCount));
+
+  ctx.fillStyle='#1e2535'; ctx.fillRect(0,0,w,h);
+
+  // grid
+  for(let i=0;i<=4;i++){
+    const x = PAD.l+i*chartW/4, y = PAD.t+i*chartH/4;
+    ctx.strokeStyle='#2d3748'; ctx.lineWidth=0.5;
+    ctx.beginPath(); ctx.moveTo(x,PAD.t); ctx.lineTo(x,PAD.t+chartH); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(PAD.l+chartW,y); ctx.stroke();
+    ctx.fillStyle='#4a5568'; ctx.font='9px sans-serif';
+    ctx.textAlign='center'; ctx.fillText(Math.round(maxX*i/4), x, h-PAD.b+13);
+    ctx.textAlign='right'; ctx.fillText(Math.round(maxY*(4-i)/4), PAD.l-4, y+3);
+  }
+
+  agents.forEach(a => {
+    const x = PAD.l + (a.toolCalls/maxX)*chartW;
+    const y = PAD.t + chartH - (a.messageCount/maxY)*chartH;
+    const r2 = a.agentType==='Explore' ? 6 : 4;
+    ctx.beginPath(); ctx.arc(x,y,r2,0,2*Math.PI);
+    ctx.fillStyle = a.agentType==='Explore' ? 'rgba(107,70,193,0.8)' : 'rgba(66,153,225,0.65)';
+    ctx.fill();
+    ctx.strokeStyle = a.agentType==='Explore' ? '#b794f4' : '#63b3ed';
+    ctx.lineWidth=0.8; ctx.stroke();
+  });
+
+  // axis labels
+  ctx.fillStyle='#718096'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('工具调用次数', PAD.l+chartW/2, h-2);
+  ctx.save(); ctx.translate(11, PAD.t+chartH/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('消息总数', 0, 0); ctx.restore();
+})();
+
+// ===== GANTT =====
+(function drawGantt() {
+  const sorted = [...agents].sort((a,b)=>a.startTime-b.startTime);
+  const byDate = {};
+  sorted.forEach(a => {
+    const d = a.startTime.toLocaleDateString('zh-CN',{timeZone:'Asia/Shanghai',month:'2-digit',day:'2-digit'});
+    if(!byDate[d]) byDate[d]=[];
+    byDate[d].push(a);
+  });
+
+  const COLORS = ['#2b6cb0','#276749','#6b46c1','#b7791f','#c53030','#2c7a7b','#2a4365','#553c9a','#22543d','#744210'];
+  let ci = 0;
+  const wrap = document.getElementById('ganttWrap');
+  let html = '';
+  Object.entries(byDate).forEach(([date, dayA]) => {
+    const dayMin = Math.min(...dayA.map(a=>a.startTime.getTime()));
+    const dayMax = Math.max(...dayA.map(a=>a.endTime.getTime()));
+    const span = dayMax - dayMin || 1;
+    html += `<div class="gantt-date-group">
+      <div class="gantt-date-label">📅 ${date} · ${dayA.length} 个 Agent</div>`;
+    dayA.forEach(a => {
+      const color = COLORS[ci++ % COLORS.length];
+      const lp = ((a.startTime.getTime()-dayMin)/span*100).toFixed(1);
+      const wp = Math.max(((a.endTime.getTime()-a.startTime.getTime())/span*100).toFixed(1), 0.5);
+      const label = a.description.length>20 ? a.description.slice(0,20)+'…' : a.description;
+      html += `<div class="gantt-row">
+        <div class="gantt-label" title="${a.description}">${label}</div>
+        <div class="gantt-track">
+          <div class="gantt-fill" style="left:${lp}%;width:${wp}%;background:${color}" title="${a.description} · ${fmtD(a.duration)}">
+            ${parseFloat(wp)>6?fmtD(a.duration):''}
+          </div>
+        </div>
+        <div class="gantt-dur">${fmtD(a.duration)}</div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  wrap.innerHTML = html;
+})();
+
+// ===== TABLE =====
+let filtered = [...agents], curPage = 1, sortKey = 'startTime', sortDir = 1;
+const PAGE = 15;
+const maxIn = Math.max(...agents.map(a=>a.inputTokens));
+const maxOut = Math.max(...agents.map(a=>a.outputTokens));
+const maxTools = Math.max(...agents.map(a=>a.toolCalls));
+
+function renderTable() {
+  const start = (curPage-1)*PAGE;
+  const rows = filtered.slice(start, start+PAGE);
+  document.getElementById('tbody').innerHTML = rows.map((a,ri) => {
+    const t = a.startTime.toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const ib = Math.round(a.inputTokens/maxIn*70), ob = Math.round(a.outputTokens/maxOut*70);
+    const isMax = a.inputTokens===maxIn;
+    const badge = a.agentType==='Explore' ? '<span class="badge badge-ex">Explore</span>' : '<span class="badge badge-gp">General</span>';
+    return `<tr>
+      <td style="color:#4a5568">${start+ri+1}</td>
+      <td style="font-family:monospace;font-size:10px;color:#4a5568" title="${a.id}">${a.id.slice(0,8)}…</td>
+      <td style="max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${a.description}">${a.description}</td>
+      <td>${badge}</td>
+      <td style="font-size:11px;color:#718096;white-space:nowrap">${t}</td>
+      <td style="color:#a0aec0">${fmtD(a.duration)}</td>
+      <td><div class="mini-bar-wrap"><div class="mini-bar" style="width:${ib}px;background:${isMax?'#c53030':'#2b6cb0'}"></div><span class="${isMax?'hi':''}" style="font-size:11px">${fmtN(a.inputTokens)}</span></div></td>
+      <td><div class="mini-bar-wrap"><div class="mini-bar" style="width:${ob}px;background:#2c7a7b"></div><span style="font-size:11px;color:#a0aec0">${fmtN(a.outputTokens)}</span></div></td>
+      <td style="${a.toolCalls===maxTools?'color:#f6ad55;font-weight:600':''}">${a.toolCalls}</td>
+      <td style="color:#a0aec0">${a.messageCount}</td>
+    </tr>`;
+  }).join('');
+
+  const total = filtered.length, pages = Math.ceil(total/PAGE);
+  document.getElementById('pgInfo').textContent = `共 ${total} 条  第 ${curPage}/${pages} 页`;
+  let btns = `<button class="pbtn" onclick="goP(${curPage-1})" ${curPage===1?'disabled':''}>‹</button>`;
+  for (let p=Math.max(1,curPage-2); p<=Math.min(pages,curPage+2); p++)
+    btns += `<button class="pbtn ${p===curPage?'act':''}" onclick="goP(${p})">${p}</button>`;
+  btns += `<button class="pbtn" onclick="goP(${curPage+1})" ${curPage>=pages?'disabled':''}>›</button>`;
+  document.getElementById('pgBtns').innerHTML = btns;
+}
+
+function goP(p) { const t=Math.ceil(filtered.length/PAGE); if(p<1||p>t)return; curPage=p; renderTable(); }
+
+function filterTable() {
+  const q = document.getElementById('searchBox').value.toLowerCase();
+  filtered = agents.filter(a => a.id.includes(q)||a.description.toLowerCase().includes(q)||a.agentType.toLowerCase().includes(q));
+  curPage = 1; renderTable();
+}
+
+function sortBy(k) {
+  if(sortKey===k) sortDir*=-1; else {sortKey=k; sortDir=1;}
+  filtered.sort((a,b) => {
+    let av=a[k], bv=b[k];
+    if(k==='startTime'){av=av.getTime();bv=bv.getTime();}
+    return av<bv?-sortDir:av>bv?sortDir:0;
+  });
+  curPage=1; renderTable();
+}
+
+renderTable();
+</script>
+</body>
+</html>
