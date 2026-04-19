@@ -87,6 +87,15 @@
       "description": "基于70个Agent并行开发银行系统的真实运行数据，深度解读多Agent编排策略、Token经济学、并行效率与工程启示",
       "file": "articles/subagents-deep-analysis.html",
       "tags": ["多Agent", "编排策略", "Token分析", "工程启示", "银行系统"]
+    },
+    {
+      "id": "openclaw-research",
+      "title": "国内大厂 OpenClaw 系列产品研究报告",
+      "category": "ai-research",
+      "date": "2026-03-18",
+      "description": "OpenClaw 系列产品深度分析，追踪大厂 AI Agent 产品演进路线、技术架构与竞争格局",
+      "file": "articles/openclaw_research.html",
+      "tags": ["OpenClaw", "AI Agent", "产品分析", "大厂"]
     }
   ]
 }
