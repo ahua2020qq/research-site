@@ -357,7 +357,7 @@
       <h2>🔐 管理验证</h2>
       <p>请输入管理密码</p>
       <div class="auth-error" id="authError"></div>
-      <input type="password" id="authPassword" placeholder="输入管理密码" autofocus>
+      <input type="password" id="authPassword" placeholder="输入管理密码" autofocus autocomplete="off">
       <button class="btn btn-primary" onclick="login()" style="width:100%">进入管理</button>
     </div>
   </div>
@@ -371,7 +371,7 @@
 
     <div class="token-section">
       <span class="token-label">🔑 GitHub Token:</span>
-      <input type="password" class="token-input" id="tokenInput" placeholder="ghp_xxxx...">
+      <input type="password" class="token-input" id="tokenInput" placeholder="ghp_xxxx..." autocomplete="off" data-lpignore="true" data-1p-ignore>
       <button class="btn-small" onclick="saveToken()">保存</button>
       <span class="token-status no" id="tokenStatus">未设置</span>
     </div>
