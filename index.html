@@ -3,7 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>研究工作台</title>
+  <title>my AI Soul — 个人研究成果 · AI Agent · 金融科技 · 工程实践</title>
+  <meta name="description" content="my AI Soul — 个人研究成果存档。涵盖 AI Agent 多Agent并行编排、银行系统实测分析、金融科技研究、桌面AI应用对比、SDD规范驱动开发等一手研究数据与深度解读报告。">
+  <meta name="keywords" content="AI Agent, 多Agent编排, Subagents, GLM, 银行系统, 金融科技, AI研究, OpenClaw, WorkBuddy, SDD, 规范驱动开发, Token分析, 工程实践, AI应用对比, 研究报告">
+  <meta name="author" content="ahua2020">
+  <meta property="og:title" content="my AI Soul — 个人研究成果存档与交流">
+  <meta property="og:description" content="AI Agent 多Agent并行编排实测、金融科技研究、桌面AI应用对比、SDD工程实践等一手研究数据与深度分析报告。">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://ahua2020qq.github.io/research-site/">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
@@ -359,9 +366,64 @@
       .main-content { margin-left: 0; padding: 20px; }
       .entries-grid { grid-template-columns: 1fr; }
     }
+
+    /* ── Copyright bar ── */
+    .copyright-bar {
+      background: rgba(59,130,246,.08);
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 24px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .copyright-bar .cc-icon { font-size: 14px; }
+
+    /* ── Footer ── */
+    .site-footer {
+      margin-top: 48px;
+      padding: 28px 0;
+      border-top: 1px solid var(--border-color);
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.8;
+    }
+    .site-footer a { color: var(--accent-blue); text-decoration: none; }
+    .site-footer a:hover { text-decoration: underline; }
+
+    /* ── About modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 3000;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 36px;
+      max-width: 520px;
+      width: 90%;
+      position: relative;
+    }
+    .modal-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+    .modal-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 12px; }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      background: none; border: none; color: var(--text-secondary);
+      font-size: 20px; cursor: pointer; padding: 4px 8px;
+    }
+    .modal-close:hover { color: var(--text-primary); }
   </style>
 </head>
 <body>
+  <div class="copyright-bar">
+    <span class="cc-icon">©</span>
+    引用本站报告、信息和数据请注明出处并放置本站链接 · 分享仅用于个人兴趣研究 · 商用请联系 <a href="mailto:ahua2020@qq.com" style="color:var(--accent-blue);text-decoration:none">ahua2020@qq.com</a>
+  </div>
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
@@ -369,6 +431,7 @@
         <div class="sidebar-title">研究工作台</div>
       </div>
       <div class="sidebar-subtitle">AI & 工程实践 · 知识沉淀</div>
+      <div class="sidebar-subtitle" style="font-size:11px;color:var(--accent-blue);margin-top:4px">my AI Soul</div>
     </div>
 
     <nav class="nav-section">
@@ -386,16 +449,20 @@
     </nav>
 
     <div class="sidebar-footer">
-      <a href="admin.html" class="admin-link" target="_blank">
+      <a href="admin.html" class="admin-link" target="_blank" style="margin-bottom:8px">
         <span>⚙️</span>
         <span>管理上传</span>
+      </a>
+      <a href="#" class="admin-link" onclick="event.preventDefault();document.getElementById('aboutModal').classList.add('show')">
+        <span>👤</span>
+        <span>关于作者</span>
       </a>
     </div>
   </aside>
 
   <main class="main-content">
     <header class="page-header">
-      <h1 class="page-title">研究成果</h1>
+      <h1 class="page-title">my AI Soul · 研究成果</h1>
       <p class="page-desc">持续积累 · 深度研究 · 工程实践</p>
     </header>
 
@@ -426,7 +493,26 @@
     </div>
 
     <div class="entries-grid" id="entriesGrid"></div>
+
+    <footer class="site-footer">
+      <p><strong>my AI Soul</strong> — 个人研究成果存档与交流平台</p>
+      <p>引用本站报告、信息和数据请注明出处并放置本站链接：<a href="https://ahua2020qq.github.io/research-site/" target="_blank">https://ahua2020qq.github.io/research-site/</a></p>
+      <p>分享仅用于个人兴趣研究。如需商用，请联系：<a href="mailto:ahua2020@qq.com">ahua2020@qq.com</a></p>
+    </footer>
   </main>
+
+  <!-- 关于作者弹窗 -->
+  <div class="modal-overlay" id="aboutModal" onclick="if(event.target===this)this.classList.remove('show')">
+    <div class="modal-card">
+      <button class="modal-close" onclick="document.getElementById('aboutModal').classList.remove('show')">×</button>
+      <h2>👤 关于作者</h2>
+      <p>一名 AI 原生系统创造者。</p>
+      <p>本站为随手存放个人公开研究内容的轻量站点，无刻意排版、无商业用途、无发布计划，仅作为个人兴趣、思考的存档与交流平台。</p>
+      <p>站内内容均为本人独立研究与整理成果，从 GitHub 开源社区学到很多知识和技能，秉持开源分享理念，研究成果仅供个人交流探讨。</p>
+      <p>如需基于本研究成果开展学术发表、软件著作权登记、专利申请等事宜，敬请务必提前联系本人取得正式授权。</p>
+      <p>联系邮箱：<a href="mailto:ahua2020@qq.com" style="color:var(--accent-blue);text-decoration:none">ahua2020@qq.com</a></p>
+    </div>
+  </div>
 
   <script>
     let siteData = { categories: [], entries: [] };
