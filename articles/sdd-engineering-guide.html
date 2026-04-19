@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SDD 规范驱动开发 — 工程团队实践指南</title>
+  <style>
+    :root {
+      --primary: #1a56db;
+      --primary-dark: #1140a6;
+      --accent: #0ea5e9;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --code-bg: #0f172a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
+      color: #fff;
+      padding: 60px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 30% 50%, rgba(30,144,255,.18) 0%, transparent 60%),
+                  radial-gradient(ellipse at 70% 50%, rgba(14,165,233,.12) 0%, transparent 60%);
+    }
+    .hero-inner { position: relative; z-index: 1; max-width: 860px; margin: auto; }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(14,165,233,.25);
+      border: 1px solid rgba(14,165,233,.5);
+      color: #7dd3fc;
+      font-size: 12px; font-weight: 600; letter-spacing: 2px;
+      padding: 5px 16px; border-radius: 20px; margin-bottom: 22px;
+    }
+    .hero h1 { font-size: 42px; font-weight: 800; line-height: 1.2; margin-bottom: 16px; }
+    .hero h1 span { color: #38bdf8; }
+    .hero p { font-size: 18px; color: #94a3b8; max-width: 640px; margin: 0 auto 32px; }
+    .hero-meta { display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; }
+    .hero-meta-item { font-size: 14px; color: #7dd3fc; }
+    .hero-meta-item strong { display: block; font-size: 22px; color: #fff; }
+
+    /* ── LAYOUT ── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+
+    /* ── NAV PILLS ── */
+    .nav-pills {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 36px;
+      background: var(--surface); padding: 14px 20px; border-radius: 12px;
+      border: 1px solid var(--border); box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .nav-pill {
+      padding: 7px 18px; border-radius: 20px; font-size: 13px; font-weight: 600;
+      cursor: pointer; border: none; background: transparent; color: var(--text-muted);
+      transition: all .2s;
+    }
+    .nav-pill:hover, .nav-pill.active {
+      background: var(--primary); color: #fff;
+    }
+
+    /* ── SECTION ── */
+    .section { margin-bottom: 52px; }
+    .section-header {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 28px;
+    }
+    .section-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .section-icon.blue  { background: #dbeafe; }
+    .section-icon.green { background: #d1fae5; }
+    .section-icon.amber { background: #fef3c7; }
+    .section-icon.purple{ background: #ede9fe; }
+    .section-icon.rose  { background: #ffe4e6; }
+    .section-icon.sky   { background: #e0f2fe; }
+    .section-title { font-size: 24px; font-weight: 700; }
+    .section-sub { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 26px;
+      box-shadow: 0 1px 6px rgba(0,0,0,.05);
+    }
+    .card + .card { margin-top: 18px; }
+    .card-title {
+      font-size: 16px; font-weight: 700; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ── GRID ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+    @media(max-width:768px){
+      .grid-2,.grid-3,.grid-4{ grid-template-columns: 1fr; }
+    }
+
+    /* ── COMPARE TABLE ── */
+    .compare-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .compare-table th {
+      background: #1e293b; color: #e2e8f0;
+      padding: 12px 16px; text-align: left; font-weight: 600;
+    }
+    .compare-table th:first-child { border-radius: 8px 0 0 0; }
+    .compare-table th:last-child  { border-radius: 0 8px 0 0; }
+    .compare-table td {
+      padding: 11px 16px; border-bottom: 1px solid var(--border); vertical-align: top;
+    }
+    .compare-table tr:hover td { background: #f1f5f9; }
+    .compare-table tr:last-child td { border-bottom: none; }
+    .tag {
+      display: inline-block; padding: 2px 10px; border-radius: 12px;
+      font-size: 12px; font-weight: 600;
+    }
+    .tag-blue   { background:#dbeafe; color:#1d4ed8; }
+    .tag-green  { background:#d1fae5; color:#065f46; }
+    .tag-amber  { background:#fef3c7; color:#92400e; }
+    .tag-red    { background:#fee2e2; color:#991b1b; }
+    .tag-purple { background:#ede9fe; color:#5b21b6; }
+
+    /* ── CODE BLOCK ── */
+    .code-block {
+      background: var(--code-bg); color: #e2e8f0;
+      border-radius: 10px; padding: 20px 22px;
+      font-family: 'Cascadia Code','Fira Code',monospace;
+      font-size: 13px; line-height: 1.7; overflow-x: auto;
+      margin: 14px 0;
+    }
+    .code-block .comment { color: #64748b; }
+    .code-block .keyword { color: #93c5fd; }
+    .code-block .string  { color: #86efac; }
+    .code-block .heading { color: #fbbf24; }
+    .code-block .bullet  { color: #f472b6; }
+
+    /* ── FLOW DIAGRAM ── */
+    .flow {
+      display: flex; align-items: stretch; gap: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden; margin: 18px 0;
+    }
+    .flow-step {
+      flex: 1; padding: 20px 16px; text-align: center; position: relative;
+      border-right: 1px solid var(--border);
+    }
+    .flow-step:last-child { border-right: none; }
+    .flow-step::after {
+      content: '→';
+      position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
+      font-size: 18px; color: var(--primary); z-index: 1;
+    }
+    .flow-step:last-child::after { display: none; }
+    .flow-num {
+      width: 30px; height: 30px; background: var(--primary); color: #fff;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; margin: 0 auto 10px;
+    }
+    .flow-label { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .flow-desc  { font-size: 12px; color: var(--text-muted); }
+    .flow-file  {
+      display: inline-block; margin-top: 8px; padding: 3px 10px;
+      background: #f1f5f9; border-radius: 6px; font-size: 11px;
+      font-family: monospace; color: var(--primary-dark);
+    }
+    @media(max-width:768px){
+      .flow { flex-direction: column; }
+      .flow-step { border-right: none; border-bottom: 1px solid var(--border); }
+      .flow-step::after { content: '↓'; right: auto; left: 50%; top: auto; bottom: -12px; transform: translateX(-50%); }
+    }
+
+    /* ── PILLAR CARDS ── */
+    .pillar {
+      border-left: 4px solid; padding: 16px 18px;
+      border-radius: 0 10px 10px 0; background: var(--surface);
+      border: 1px solid var(--border); border-left-width: 4px;
+      margin-bottom: 12px;
+    }
+    .pillar-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+    .pillar ul { padding-left: 20px; }
+    .pillar li  { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+
+    /* ── LEVEL CARDS ── */
+    .level-card {
+      border-radius: 12px; padding: 20px;
+      border: 2px solid transparent;
+      background: var(--surface);
+    }
+    .level-card.l1 { border-color: #93c5fd; }
+    .level-card.l2 { border-color: #6ee7b7; }
+    .level-card.l3 { border-color: #fbbf24; }
+    .level-num {
+      font-size: 11px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; margin-bottom: 8px;
+    }
+    .level-card.l1 .level-num { color: #2563eb; }
+    .level-card.l2 .level-num { color: #059669; }
+    .level-card.l3 .level-num { color: #d97706; }
+    .level-name { font-size: 17px; font-weight: 700; margin-bottom: 10px; }
+    .level-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
+
+    /* ── ROADMAP ── */
+    .roadmap-item {
+      display: flex; gap: 20px; margin-bottom: 24px;
+      padding: 20px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 14px;
+    }
+    .roadmap-phase {
+      flex-shrink: 0; width: 88px; text-align: center;
+    }
+    .phase-badge {
+      background: var(--primary); color: #fff;
+      border-radius: 8px; padding: 6px 10px;
+      font-size: 11px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; margin-bottom: 6px;
+    }
+    .phase-time { font-size: 12px; color: var(--text-muted); }
+    .roadmap-content h4 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .roadmap-content p  { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
+    .checklist { list-style: none; padding: 0; }
+    .checklist li {
+      font-size: 13px; padding: 3px 0; color: var(--text-muted);
+    }
+    .checklist li::before { content: '✓ '; color: var(--success); font-weight: 700; }
+
+    /* ── PITFALL CARD ── */
+    .pitfall {
+      display: flex; gap: 16px; padding: 16px;
+      background: #fff7ed; border: 1px solid #fed7aa;
+      border-radius: 10px; margin-bottom: 12px;
+    }
+    .pitfall-icon { font-size: 22px; flex-shrink: 0; }
+    .pitfall-title { font-weight: 700; font-size: 14px; color: #c2410c; margin-bottom: 4px; }
+    .pitfall-desc  { font-size: 13px; color: #7c2d12; }
+    .pitfall-fix   { font-size: 13px; color: #15803d; margin-top: 6px; font-weight: 600; }
+
+    /* ── SPEC PREVIEW ── */
+    .spec-preview {
+      background: #fafafa; border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden;
+    }
+    .spec-preview-header {
+      background: #e2e8f0; padding: 8px 16px; font-size: 12px;
+      font-family: monospace; color: #475569; display: flex;
+      align-items: center; gap: 8px;
+    }
+    .spec-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .spec-preview-body { padding: 18px 20px; font-size: 13px; line-height: 1.8; }
+    .md-h1 { font-size: 16px; font-weight: 800; color: #1e293b; margin-bottom: 4px; }
+    .md-h2 { font-size: 14px; font-weight: 700; color: #334155; margin: 14px 0 6px; }
+    .md-h3 { font-size: 13px; font-weight: 600; color: #475569; margin: 10px 0 4px; }
+    .md-p  { color: #475569; margin-bottom: 8px; }
+    .md-code { background: #e2e8f0; padding: 1px 6px; border-radius: 4px; font-family: monospace; font-size: 12px; }
+    .md-strong { font-weight: 700; color: #1e293b; }
+    .md-list { padding-left: 20px; }
+    .md-list li { color: #475569; margin-bottom: 4px; }
+    .md-accent { color: #2563eb; font-style: italic; }
+
+    /* ── ROI BAR ── */
+    .roi-bar { margin-bottom: 12px; }
+    .roi-label { font-size: 13px; font-weight: 600; margin-bottom: 4px; display: flex; justify-content: space-between; }
+    .roi-track { height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; }
+    .roi-fill  { height: 100%; border-radius: 5px; transition: width .6s ease; }
+
+    /* ── PRINCIPLE CHIP ── */
+    .principle-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #f1f5f9; border: 1px solid #e2e8f0;
+      padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+      margin: 4px;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center; padding: 32px;
+      color: var(--text-muted); font-size: 13px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── CALLOUT ── */
+    .callout {
+      display: flex; gap: 14px; padding: 16px 20px;
+      border-radius: 10px; margin: 18px 0;
+    }
+    .callout.info  { background: #eff6ff; border-left: 4px solid #3b82f6; }
+    .callout.tip   { background: #f0fdf4; border-left: 4px solid #22c55e; }
+    .callout.warn  { background: #fff7ed; border-left: 4px solid #f59e0b; }
+    .callout-icon  { font-size: 20px; flex-shrink: 0; }
+    .callout-text  { font-size: 14px; color: var(--text); }
+    .callout-text strong { font-weight: 700; display: block; margin-bottom: 4px; }
+
+    /* TABS */
+    .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 24px; }
+    .tab {
+      padding: 10px 22px; font-size: 14px; font-weight: 600; cursor: pointer;
+      border: none; background: none; color: var(--text-muted);
+      border-bottom: 2px solid transparent; margin-bottom: -2px;
+    }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    hr.divider { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">SDD · SPEC-DRIVEN DEVELOPMENT</div>
+    <h1>规范驱动开发<br/><span>工程团队实践指南</span></h1>
+    <p>从理念到落地 — 帮助工程团队理解、实施并持续演进 SDD 范式，让 AI 辅助开发从"玄学"走向工程化</p>
+    <div class="hero-meta">
+      <div class="hero-meta-item"><strong>5 大模块</strong>从理念到工具</div>
+      <div class="hero-meta-item"><strong>3 种流派</strong>适配不同场景</div>
+      <div class="hero-meta-item"><strong>24 周</strong>落地路线图</div>
+      <div class="hero-meta-item"><strong>55%+</strong>效率提升数据</div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ───────────────── NAV ───────────────── -->
+  <div class="nav-pills">
+    <button class="nav-pill active" onclick="scrollTo('sec-why')">① 为什么需要SDD</button>
+    <button class="nav-pill" onclick="scrollTo('sec-what')">② 核心理念</button>
+    <button class="nav-pill" onclick="scrollTo('sec-workflow')">③ 工作流与文档</button>
+    <button class="nav-pill" onclick="scrollTo('sec-tools')">④ 工具选型</button>
+    <button class="nav-pill" onclick="scrollTo('sec-practice')">⑤ 工程落地</button>
+    <button class="nav-pill" onclick="scrollTo('sec-verify')">⑥ 验证框架</button>
+    <button class="nav-pill" onclick="scrollTo('sec-pitfall')">⑦ 避坑指南</button>
+    <button class="nav-pill" onclick="scrollTo('sec-roi')">⑧ ROI参考</button>
+  </div>
+
+  <!-- ═══════════════════ S1 · 为什么 ═══════════════════ -->
+  <div class="section" id="sec-why">
+    <div class="section-header">
+      <div class="section-icon blue">🔥</div>
+      <div>
+        <div class="section-title">为什么工程团队需要 SDD？</div>
+        <div class="section-sub">Vibe Coding 的代价 vs. 规范先行的收益</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">❌ 传统 Vibe Coding 的痛点</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="pitfall" style="background:#fff1f2;border-color:#fecaca;">
+            <div class="pitfall-icon">🎲</div>
+            <div>
+              <div class="pitfall-title">不可预测性</div>
+              <div class="pitfall-desc">每次对话风格、架构各异，积累大量技术债务</div>
+            </div>
+          </div>
+          <div class="pitfall" style="background:#fff1f2;border-color:#fecaca;">
+            <div class="pitfall-icon">🌊</div>
+            <div>
+              <div class="pitfall-title">上下文漂移</div>
+              <div class="pitfall-desc">随着轮次增加，AI对整体目标的理解持续偏移</div>
+            </div>
+          </div>
+          <div class="pitfall" style="background:#fff1f2;border-color:#fecaca;">
+            <div class="pitfall-icon">🔍</div>
+            <div>
+              <div class="pitfall-title">幻觉难以发现</div>
+              <div class="pitfall-desc">没有规范可供核对，无从判断AI输出是否符合意图</div>
+            </div>
+          </div>
+          <div class="pitfall" style="background:#fff1f2;border-color:#fecaca;">
+            <div class="pitfall-icon">📂</div>
+            <div>
+              <div class="pitfall-title">难以协作追溯</div>
+              <div class="pitfall-desc">需求和决策只留在碎片化聊天记录中，无法共享</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">✅ SDD 带来的改变</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="padding:14px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;">
+            <div style="font-weight:700;color:#15803d;margin-bottom:4px;">📐 可预测性</div>
+            <div style="font-size:13px;color:#166534;">规范作为"锚点"，每次生成均与意图对齐</div>
+          </div>
+          <div style="padding:14px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;">
+            <div style="font-weight:700;color:#15803d;margin-bottom:4px;">🔒 上下文锁定</div>
+            <div style="font-size:13px;color:#166534;">spec / plan / tasks 三件套确保上下文始终一致</div>
+          </div>
+          <div style="padding:14px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;">
+            <div style="font-weight:700;color:#15803d;margin-bottom:4px;">✅ 幻觉可检测</div>
+            <div style="font-size:13px;color:#166534;">规范即测试标准，AI输出可被即时验证</div>
+          </div>
+          <div style="padding:14px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;">
+            <div style="font-weight:700;color:#15803d;margin-bottom:4px;">🤝 天然可协作</div>
+            <div style="font-size:13px;color:#166534;">规范纳入 Git，需求与代码共同版本化管理</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout info" style="margin-top:20px;">
+      <div class="callout-icon">💡</div>
+      <div class="callout-text">
+        <strong>核心症结</strong>
+        传统开发中"代码是真相，规范是辅助"的权力结构，决定了规范与实现之间永远存在鸿沟。团队要么花大量精力维护文档，要么干脆放任文档腐烂。SDD 从根本上颠覆了这种关系。
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ═══════════════════ S2 · 核心理念 ═══════════════════ -->
+  <div class="section" id="sec-what">
+    <div class="section-header">
+      <div class="section-icon purple">🧭</div>
+      <div>
+        <div class="section-title">SDD 核心理念</div>
+        <div class="section-sub">权力倒置 · 规范六原则 · 三大层次</div>
+      </div>
+    </div>
+
+    <!-- 权力倒置 -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title">⚡ 权力倒置：最核心的思维转变</div>
+      <table class="compare-table">
+        <thead><tr><th>维度</th><th>传统范式</th><th>SDD 范式</th></tr></thead>
+        <tbody>
+          <tr><td>权力关系</td><td>规范服务于代码</td><td><strong>代码服务于规范</strong></td></tr>
+          <tr><td>PRD 角色</td><td>指导实现的参考文件</td><td><strong>直接生成实现的源头</strong></td></tr>
+          <tr><td>调试方式</td><td>修复代码</td><td><strong>修复产生了错误代码的规范</strong></td></tr>
+          <tr><td>维护软件</td><td>重构代码</td><td><strong>演进规范</strong></td></tr>
+          <tr><td>事实来源</td><td>代码是唯一事实</td><td><strong>规范是第一性产物</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 六大原则 -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title">📌 SDD 六大核心原则</div>
+      <div class="grid-2">
+        <div style="padding:14px;border:1px solid #e2e8f0;border-radius:10px;">
+          <div style="font-weight:700;color:#1d4ed8;margin-bottom:6px;">① 规范是通用语言</div>
+          <div style="font-size:13px;color:var(--text-muted);">规范是首要制品，代码只是规范在特定语言和框架中的"表达"，不同语言产生不同实现，但规范唯一</div>
+        </div>
+        <div style="padding:14px;border:1px solid #e2e8f0;border-radius:10px;">
+          <div style="font-weight:700;color:#1d4ed8;margin-bottom:6px;">② 可执行规范</div>
+          <div style="font-size:13px;color:var(--text-muted);">规范必须足够精确、完整且无歧义，以至于能直接驱动可工作系统的生成，而非仅作参考</div>
+        </div>
+        <div style="padding:14px;border:1px solid #e2e8f0;border-radius:10px;">
+          <div style="font-weight:700;color:#1d4ed8;margin-bottom:6px;">③ 持续精化</div>
+          <div style="font-size:13px;color:var(--text-muted);">一致性验证不是一次性门禁，而是 AI 持续分析规范中歧义、矛盾与遗漏的过程</div>
+        </div>
+        <div style="padding:14px;border:1px solid #e2e8f0;border-radius:10px;">
+          <div style="font-weight:700;color:#1d4ed8;margin-bottom:6px;">④ 研究驱动上下文</div>
+          <div style="font-size:13px;color:var(--text-muted);">研究代理全程收集技术选型、性能影响和组织约束等关键上下文，在规范生成前完成</div>
+        </div>
+        <div style="padding:14px;border:1px solid #e2e8f0;border-radius:10px;">
+          <div style="font-weight:700;color:#1d4ed8;margin-bottom:6px;">⑤ 双向反馈</div>
+          <div style="font-size:13px;color:var(--text-muted);">生产环境的指标与故障不只触发热修复，而是驱动规范的持续演进，形成闭环</div>
+        </div>
+        <div style="padding:14px;border:1px solid #e2e8f0;border-radius:10px;">
+          <div style="font-weight:700;color:#1d4ed8;margin-bottom:6px;">⑥ 分支探索</div>
+          <div style="font-size:13px;color:var(--text-muted);">从同一规范可生成多个实现方案，探索性能、可维护性、用户体验等不同优化路径</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 三大层次 -->
+    <div class="card">
+      <div class="card-title">📊 规范的三大层次（由浅入深）</div>
+      <div class="grid-3">
+        <div class="level-card l1">
+          <div class="level-num">Level 1</div>
+          <div class="level-name">规范优先<br/><small>Spec-First</small></div>
+          <div class="level-desc">先写规范再让AI生成代码；任务完成后规范可不保留</div>
+          <div style="font-size:12px;margin-top:8px;">
+            <span class="tag tag-blue">适合</span> 小团队 · 快速迭代 · 探索期<br/>
+            <span class="tag tag-amber" style="margin-top:4px;">工具</span> Kiro · OpenSpec 极简模式
+          </div>
+        </div>
+        <div class="level-card l2">
+          <div class="level-num">Level 2</div>
+          <div class="level-name">规范锚定<br/><small>Spec-Anchored</small></div>
+          <div class="level-desc">规范在任务完成后持久保留，用于后续功能的演进和维护</div>
+          <div style="font-size:12px;margin-top:8px;">
+            <span class="tag tag-green">适合</span> 中型团队 · 持续演进系统<br/>
+            <span class="tag tag-amber" style="margin-top:4px;">工具</span> OpenSpec · Spec-kit 标准模式
+          </div>
+        </div>
+        <div class="level-card l3">
+          <div class="level-num">Level 3</div>
+          <div class="level-name">规范即源码<br/><small>Spec-as-Source</small></div>
+          <div class="level-desc">规范成为主要源文件，开发者只编辑规范，永远不直接修改代码</div>
+          <div style="font-size:12px;margin-top:8px;">
+            <span class="tag tag-amber">适合</span> 核心基础设施 · 高可靠性系统<br/>
+            <span class="tag tag-red" style="margin-top:4px;">工具</span> Tessl · Spec-kit 激进模式
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ═══════════════════ S3 · 工作流 ═══════════════════ -->
+  <div class="section" id="sec-workflow">
+    <div class="section-header">
+      <div class="section-icon sky">🔄</div>
+      <div>
+        <div class="section-title">SDD 工作流与三大核心文档</div>
+        <div class="section-sub">Proposal → Spec → Plan → Tasks → Implement 完整链路</div>
+      </div>
+    </div>
+
+    <!-- 流程图 -->
+    <div class="flow">
+      <div class="flow-step" style="background:#eff6ff;">
+        <div class="flow-num">1</div>
+        <div class="flow-label">需求提案</div>
+        <div class="flow-desc">描述模糊想法，AI辅助澄清需求</div>
+        <div class="flow-file">PROPOSAL</div>
+      </div>
+      <div class="flow-step" style="background:#f0fdf4;">
+        <div class="flow-num">2</div>
+        <div class="flow-label">功能规范</div>
+        <div class="flow-desc">用户故事 + 验收标准</div>
+        <div class="flow-file">spec.md</div>
+      </div>
+      <div class="flow-step" style="background:#fefce8;">
+        <div class="flow-num">3</div>
+        <div class="flow-label">技术方案</div>
+        <div class="flow-desc">技术选型 + 架构决策</div>
+        <div class="flow-file">plan.md</div>
+      </div>
+      <div class="flow-step" style="background:#fdf4ff;">
+        <div class="flow-num">4</div>
+        <div class="flow-label">任务拆解</div>
+        <div class="flow-desc">原子化任务 + 依赖关系</div>
+        <div class="flow-file">tasks.md</div>
+      </div>
+      <div class="flow-step" style="background:#fff1f2;">
+        <div class="flow-num">5</div>
+        <div class="flow-label">代码实现</div>
+        <div class="flow-desc">AI按任务逐一执行</div>
+        <div class="flow-file">CODE</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <div class="callout-icon">🔁</div>
+      <div class="callout-text">
+        <strong>迭代原则</strong>
+        五个阶段并非刚性串行。发现规范不清晰可随时回到 spec.md；生产故障可反向驱动规范演进。维护系统 = 演进规范，不是修改代码。
+      </div>
+    </div>
+
+    <!-- 三大文档详解 Tabs -->
+    <div class="card" style="margin-top:20px;">
+      <div class="card-title">📄 三大核心文档详解</div>
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('spec')">spec.md（做什么）</button>
+        <button class="tab" onclick="switchTab('plan')">plan.md（怎么做）</button>
+        <button class="tab" onclick="switchTab('tasks')">tasks.md（谁来做）</button>
+      </div>
+
+      <div id="tab-spec" class="tab-pane active">
+        <div class="grid-2">
+          <div>
+            <p style="font-size:14px;color:var(--text-muted);margin-bottom:14px;">
+              类比 <strong>PRD 产品需求文档</strong>，定义系统"做什么"。包含用户故事、验收标准（GIVEN/WHEN/THEN）、边界条件、非功能需求。
+            </p>
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text-muted);">规范复杂度参考</div>
+            <div class="roi-bar"><div class="roi-label"><span>基础函数</span><span>100-200字</span></div><div class="roi-track"><div class="roi-fill" style="width:20%;background:#3b82f6;"></div></div></div>
+            <div class="roi-bar"><div class="roi-label"><span>API 端点</span><span>300-500字</span></div><div class="roi-track"><div class="roi-fill" style="width:45%;background:#6366f1;"></div></div></div>
+            <div class="roi-bar"><div class="roi-label"><span>组件/模块</span><span>500-800字</span></div><div class="roi-track"><div class="roi-fill" style="width:65%;background:#8b5cf6;"></div></div></div>
+            <div class="roi-bar"><div class="roi-label"><span>系统架构</span><span>1000-2000字</span></div><div class="roi-track"><div class="roi-fill" style="width:100%;background:#a855f7;"></div></div></div>
+          </div>
+          <div>
+            <div class="spec-preview">
+              <div class="spec-preview-header">
+                <div class="spec-dot" style="background:#ef4444;"></div>
+                <div class="spec-dot" style="background:#f59e0b;"></div>
+                <div class="spec-dot" style="background:#22c55e;"></div>
+                &nbsp;spec.md
+              </div>
+              <div class="spec-preview-body">
+                <div class="md-h1"># 003 - 实时聊天功能</div>
+                <div class="md-h2">## 概述 (Overview)</div>
+                <div class="md-p">实现聊天室实时消息推送，支持<span class="md-code">消息历史</span>与<span class="md-code">用户在线状态</span>。</div>
+                <div class="md-h2">## 用户故事 1 — 发送消息 (P1)</div>
+                <div class="md-h3">验收场景：</div>
+                <ul class="md-list">
+                  <li><span class="md-accent">假设</span> 已登录用户在聊天室</li>
+                  <li><span class="md-accent">当</span> 输入消息并按下回车</li>
+                  <li><span class="md-accent">则</span> 消息在 500ms 内出现在窗口</li>
+                </ul>
+                <div class="md-h2">## 边界条件</div>
+                <ul class="md-list">
+                  <li>消息超过 1000 字符时？</li>
+                  <li>网络断开时系统如何应对？</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-plan" class="tab-pane">
+        <div class="grid-2">
+          <div>
+            <p style="font-size:14px;color:var(--text-muted);margin-bottom:14px;">
+              类比<strong>技术设计文档</strong>，定义系统"怎么做"。包含技术选型与理由、架构决策、数据模型、接口契约、性能要求等。
+            </p>
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text-muted);">plan.md 标准结构</div>
+            <ul style="padding-left:18px;font-size:13px;color:var(--text-muted);">
+              <li style="margin-bottom:6px;"><strong>摘要</strong> — 一句话描述技术方案</li>
+              <li style="margin-bottom:6px;"><strong>技术上下文</strong> — 语言版本、依赖、框架</li>
+              <li style="margin-bottom:6px;"><strong>阶段划分</strong> — Phase 1/2/3...每阶段目标</li>
+              <li style="margin-bottom:6px;"><strong>宪法检查</strong> — 是否遵循架构原则</li>
+              <li style="margin-bottom:6px;"><strong>风险与降级方案</strong></li>
+            </ul>
+          </div>
+          <div>
+            <div class="spec-preview">
+              <div class="spec-preview-header">
+                <div class="spec-dot" style="background:#ef4444;"></div>
+                <div class="spec-dot" style="background:#f59e0b;"></div>
+                <div class="spec-dot" style="background:#22c55e;"></div>
+                &nbsp;plan.md
+              </div>
+              <div class="spec-preview-body">
+                <div class="md-h1"># 实时聊天 — 技术实现方案</div>
+                <div class="md-h2">## 摘要</div>
+                <div class="md-p">使用 <span class="md-code">WebSocket</span> 推送，<span class="md-code">PostgreSQL</span> 存消息历史，<span class="md-code">Redis</span> 管理在线状态。</div>
+                <div class="md-h2">## 技术上下文</div>
+                <ul class="md-list">
+                  <li>Python 3.12 · FastAPI 0.115</li>
+                  <li>websockets 12.0 · pytest 8.x</li>
+                </ul>
+                <div class="md-h2">## 阶段划分</div>
+                <ul class="md-list">
+                  <li>Phase 1: 项目初始化 + 数据库schema</li>
+                  <li>Phase 2: WebSocket 连接处理</li>
+                  <li>Phase 3: 消息历史 + 在线状态</li>
+                </ul>
+                <div class="md-h2">## 宪法检查</div>
+                <ul class="md-list">
+                  <li>☑ TDD 优先原则</li>
+                  <li>☑ 覆盖率 ≥ 80%</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-tasks" class="tab-pane">
+        <div class="grid-2">
+          <div>
+            <p style="font-size:14px;color:var(--text-muted);margin-bottom:14px;">
+              类比<strong>开发任务清单</strong>，定义"谁来做/怎么拆"。每个任务原子化，包含类型标记、文件路径、依赖关系、并行标记。
+            </p>
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text-muted);">关键标记说明</div>
+            <table class="compare-table" style="font-size:12px;">
+              <thead><tr><th>标记</th><th>含义</th><th>规则</th></tr></thead>
+              <tbody>
+                <tr><td><span class="tag tag-blue">[T]</span></td><td>测试任务</td><td>必须在 [I] 之前</td></tr>
+                <tr><td><span class="tag tag-green">[I]</span></td><td>实现任务</td><td>依赖对应的 [T]</td></tr>
+                <tr><td><span class="tag tag-purple">[P]</span></td><td>可并行</td><td>无依赖关系时标记</td></tr>
+              </tbody>
+            </table>
+            <div class="callout tip" style="margin-top:12px;">
+              <div class="callout-icon">⚡</div>
+              <div class="callout-text"><strong>TDD 强制原则</strong>测试任务 [T] 必须在实现任务 [I] 之前执行，体现测试驱动开发的核心思想</div>
+            </div>
+          </div>
+          <div>
+            <div class="spec-preview">
+              <div class="spec-preview-header">
+                <div class="spec-dot" style="background:#ef4444;"></div>
+                <div class="spec-dot" style="background:#f59e0b;"></div>
+                <div class="spec-dot" style="background:#22c55e;"></div>
+                &nbsp;tasks.md
+              </div>
+              <div class="spec-preview-body">
+                <div class="md-h1"># 任务列表：实时聊天</div>
+                <div class="md-h2">## 阶段 1：项目初始化</div>
+                <ul class="md-list">
+                  <li>- [ ] T001 创建项目结构</li>
+                  <li>- [ ] T002 [P] 配置Lint工具</li>
+                </ul>
+                <div class="md-h2">## 阶段 2：基础设施</div>
+                <ul class="md-list">
+                  <li>- [ ] T003 [T] 创建消息表schema测试</li>
+                  <li>- [ ] T004 [I] 创建消息表schema</li>
+                </ul>
+                <div class="md-h2">## 阶段 3：消息功能</div>
+                <ul class="md-list">
+                  <li>- [ ] T005 [T] [P] WebSocket契约测试</li>
+                  <li>- [ ] T006 [I] 实现WebSocket处理器</li>
+                  <li>- [ ] T007 [I] [P] 消息广播逻辑</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 文件结构 -->
+    <div class="card" style="margin-top:18px;">
+      <div class="card-title">📁 推荐项目文件结构</div>
+      <div class="code-block">
+<span class="comment">.</span>
+├── <span class="heading">CONSTITUTION.md</span>          <span class="comment"># 项目宪法 — 架构原则与治理</span>
+├── <span class="heading">CLAUDE.md / AGENTS.md</span>    <span class="comment"># AI 操作手册（工具特定）</span>
+├── <span class="heading">specs/</span>                   <span class="comment"># SDD 规范文档目录</span>
+│   └── <span class="string">001-core-login/</span>
+│       ├── <span class="keyword">spec.md</span>          <span class="comment"># 需求规格（做什么）</span>
+│       ├── <span class="keyword">plan.md</span>          <span class="comment"># 技术方案（怎么做）</span>
+│       ├── <span class="keyword">tasks.md</span>         <span class="comment"># 任务清单（拆多细）</span>
+│       ├── research.md      <span class="comment"># 技术调研（可选）</span>
+│       ├── data-model.md    <span class="comment"># 数据模型（可选）</span>
+│       └── contracts/       <span class="comment"># 接口契约（可选）</span>
+│           └── api-spec.json
+└── src/                     <span class="comment"># 代码实现（由规范驱动生成）</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ═══════════════════ S4 · 工具选型 ═══════════════════ -->
+  <div class="section" id="sec-tools">
+    <div class="section-header">
+      <div class="section-icon amber">🛠️</div>
+      <div>
+        <div class="section-title">工具选型与决策矩阵</div>
+        <div class="section-sub">主流 SDD 工具对比 · 六维度选型决策树</div>
+      </div>
+    </div>
+
+    <!-- 三大工具对比 -->
+    <div class="card" style="margin-bottom:18px;">
+      <div class="card-title">🔍 主流 SDD 工具横向对比</div>
+      <div class="grid-3">
+        <div style="border:2px solid #3b82f6;border-radius:12px;padding:18px;">
+          <div style="font-size:18px;font-weight:800;color:#2563eb;margin-bottom:4px;">OpenSpec</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">轻量灵活的规范层</div>
+          <div style="font-size:13px;">
+            <div style="margin-bottom:8px;"><span class="tag tag-blue">理念</span> fluid not rigid</div>
+            <div style="margin-bottom:8px;"><span class="tag tag-green">优势</span> 20+ AI工具支持，接入成本极低</div>
+            <div style="margin-bottom:8px;"><span class="tag tag-amber">触发</span> 手动 /opsx:* 命令</div>
+            <div style="margin-bottom:8px;"><span class="tag tag-blue">适合</span> 小团队 · 快速迭代</div>
+          </div>
+        </div>
+        <div style="border:2px solid #10b981;border-radius:12px;padding:18px;">
+          <div style="font-size:18px;font-weight:800;color:#059669;margin-bottom:4px;">Spec-kit</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">GitHub官方工程化工具</div>
+          <div style="font-size:13px;">
+            <div style="margin-bottom:8px;"><span class="tag tag-green">理念</span> 宪法治理 + 质量门禁</div>
+            <div style="margin-bottom:8px;"><span class="tag tag-green">优势</span> 五层结构化，多AI助手支持</div>
+            <div style="margin-bottom:8px;"><span class="tag tag-amber">触发</span> 手动 /speckit.* 命令</div>
+            <div style="margin-bottom:8px;"><span class="tag tag-blue">适合</span> 中大型团队 · 企业级应用</div>
+          </div>
+        </div>
+        <div style="border:2px solid #8b5cf6;border-radius:12px;padding:18px;">
+          <div style="font-size:18px;font-weight:800;color:#7c3aed;margin-bottom:4px;">Superpowers</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">工程技能框架</div>
+          <div style="font-size:13px;">
+            <div style="margin-bottom:8px;"><span class="tag tag-purple">理念</span> Process over Prompt</div>
+            <div style="margin-bottom:8px;"><span class="tag tag-green">优势</span> 自动触发技能，TDD强制集成</div>
+            <div style="margin-bottom:8px;"><span class="tag tag-amber">触发</span> <strong>自动触发</strong>技能</div>
+            <div style="margin-bottom:8px;"><span class="tag tag-blue">适合</span> TDD要求高 · 自动化优先</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 选型决策树 -->
+    <div class="card">
+      <div class="card-title">🌲 六维度选型决策矩阵</div>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>维度</th>
+            <th>小团队 (2-10人)</th>
+            <th>中型团队 (10-50人)</th>
+            <th>大型组织 (50+人)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>AI 工具推荐</strong></td>
+            <td>Cursor / Windsurf</td>
+            <td>AWS Kiro / GitHub Copilot</td>
+            <td>HumanLayer / Tessl 企业版</td>
+          </tr>
+          <tr>
+            <td><strong>规范工具推荐</strong></td>
+            <td>OpenSpec / 极简 Spec-kit</td>
+            <td>Spec-kit 标准模式</td>
+            <td>Spec-kit 激进模式</td>
+          </tr>
+          <tr>
+            <td><strong>预算参考</strong></td>
+            <td>免费 (Aider/OpenSpec) 或 $10-20/月</td>
+            <td>$19/人/月 (企业 Copilot)</td>
+            <td>企业授权 (按需定价)</td>
+          </tr>
+          <tr>
+            <td><strong>学习曲线</strong></td>
+            <td>低 — 中 (1-2周适应)</td>
+            <td>中 (2-4周适应)</td>
+            <td>较陡 (需培训计划)</td>
+          </tr>
+          <tr>
+            <td><strong>新项目首选</strong></td>
+            <td><span class="tag tag-blue">Cursor + OpenSpec</span></td>
+            <td><span class="tag tag-green">Kiro + Spec-kit</span></td>
+            <td><span class="tag tag-purple">企业平台 + Spec-kit</span></td>
+          </tr>
+          <tr>
+            <td><strong>遗留项目首选</strong></td>
+            <td>Claude Code + 轻量规范</td>
+            <td>Claude Code + Spec-kit</td>
+            <td>Amazon Q + Spec-kit</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="callout warn" style="margin-top:14px;">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-text">
+          <strong>避免供应商锁定</strong>
+          使用标准规范格式（OpenAPI / JSON Schema / Markdown），规范文件不依赖特定工具，确保可迁移性。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ═══════════════════ S5 · 工程落地 ═══════════════════ -->
+  <div class="section" id="sec-practice">
+    <div class="section-header">
+      <div class="section-icon green">🏗️</div>
+      <div>
+        <div class="section-title">工程落地实施路线图</div>
+        <div class="section-sub">三阶段 24 周推进计划 · 含规范编写技巧</div>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-phase">
+        <div class="phase-badge" style="background:#3b82f6;">阶段一</div>
+        <div class="phase-time">第 1-4 周</div>
+      </div>
+      <div class="roadmap-content">
+        <h4>🌱 试点验证 — 最小风险启动</h4>
+        <p>以 1-2 名开发者 + 1 个非关键新特性为试点。选择低摩擦工具，验证团队可行性。</p>
+        <ul class="checklist">
+          <li>选定 1 名 SDD 种子选手，完成工具安装与基础培训</li>
+          <li>选择一个中等复杂度的新功能，完整跑通 spec/plan/tasks/implement</li>
+          <li>使用 GitHub Copilot 或 Cursor（低学习曲线）降低摩擦</li>
+          <li>记录时间消耗、质量指标、遇到的障碍</li>
+          <li>复盘：提炼模板，识别团队培训需求</li>
+        </ul>
+        <div style="margin-top:10px;">
+          <span class="tag tag-green">成功标准</span>
+          <span style="font-size:13px;margin-left:8px;color:var(--text-muted);">完成特性 · 可衡量的时间节省 · spec/plan/tasks 三件套完整</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-phase">
+        <div class="phase-badge" style="background:#10b981;">阶段二</div>
+        <div class="phase-time">第 5-12 周</div>
+      </div>
+      <div class="roadmap-content">
+        <h4>🚀 团队扩展 — 模式标准化</h4>
+        <p>把验证过的模式扩展到全团队。建立团队级规范模板和评审流程，开展培训工作坊。</p>
+        <ul class="checklist">
+          <li>建立团队 spec/plan/tasks 标准模板库（纳入 Git 仓库）</li>
+          <li>制定规范评审流程（谁审 spec？谁审 plan？）</li>
+          <li>开展规范写作工作坊（重点：如何写好验收标准）</li>
+          <li>所有新功能强制走 SDD 流程，存量系统选择性引入</li>
+          <li>建立 CONSTITUTION.md（项目架构宪法）</li>
+        </ul>
+        <div style="margin-top:10px;">
+          <span class="tag tag-green">成功标准</span>
+          <span style="font-size:13px;margin-left:8px;color:var(--text-muted);">50%+ 新特性采用 SDD · 规范评审流程运转正常</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-phase">
+        <div class="phase-badge" style="background:#8b5cf6;">阶段三</div>
+        <div class="phase-time">第 13-24 周</div>
+      </div>
+      <div class="roadmap-content">
+        <h4>⚙️ 全组织推广 — 成为默认工作流</h4>
+        <p>将 SDD 设为团队默认工作方式。制定治理政策，融入 CI/CD 流程，建立持续度量机制。</p>
+        <ul class="checklist">
+          <li>将规范评审纳入 PR 门禁（无 spec.md 不得合并）</li>
+          <li>CI/CD 集成：自动检测规范与代码的一致性（漂移检测）</li>
+          <li>建立 SDD 实践知识库，沉淀踩坑经验</li>
+          <li>定期 SDD 回顾会议，持续优化模板和流程</li>
+          <li>建立 ROI 度量面板（时间、质量、一致性三维度）</li>
+        </ul>
+        <div style="margin-top:10px;">
+          <span class="tag tag-green">成功标准</span>
+          <span style="font-size:13px;margin-left:8px;color:var(--text-muted);">80%+ 采用率 · ROI 为正 · 规范库成为团队核心资产</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 规范编写技巧 -->
+    <div class="card" style="margin-top:8px;">
+      <div class="card-title">✍️ 好规范的七大要素（速查）</div>
+      <div class="grid-2">
+        <div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <div style="background:#dbeafe;color:#1d4ed8;font-weight:700;font-size:12px;padding:3px 8px;border-radius:6px;flex-shrink:0;">①</div>
+              <div><strong>目标与价值</strong> — 解决什么业务问题，为谁而建</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <div style="background:#dbeafe;color:#1d4ed8;font-weight:700;font-size:12px;padding:3px 8px;border-radius:6px;flex-shrink:0;">②</div>
+              <div><strong>上下文与约束</strong> — 架构、依赖、环境、性能要求</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <div style="background:#dbeafe;color:#1d4ed8;font-weight:700;font-size:12px;padding:3px 8px;border-radius:6px;flex-shrink:0;">③</div>
+              <div><strong>功能需求</strong> — 核心行为与特性，用用户故事表达</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <div style="background:#dbeafe;color:#1d4ed8;font-weight:700;font-size:12px;padding:3px 8px;border-radius:6px;flex-shrink:0;">④</div>
+              <div><strong>非功能需求</strong> — 安全、性能、可扩展性、可访问性</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <div style="background:#d1fae5;color:#065f46;font-weight:700;font-size:12px;padding:3px 8px;border-radius:6px;flex-shrink:0;">⑤</div>
+              <div><strong>边界与错误处理</strong> — 明确定义异常场景</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <div style="background:#d1fae5;color:#065f46;font-weight:700;font-size:12px;padding:3px 8px;border-radius:6px;flex-shrink:0;">⑥</div>
+              <div><strong>测试标准</strong> — 验证方法与成功指标，覆盖率要求</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <div style="background:#d1fae5;color:#065f46;font-weight:700;font-size:12px;padding:3px 8px;border-radius:6px;flex-shrink:0;">⑦</div>
+              <div><strong>示例</strong> — 输入/输出示例、样例数据、使用场景</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 好坏对比 -->
+      <div style="margin-top:18px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:12px;">📝 规范质量对比示例</div>
+        <div class="grid-2">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#dc2626;margin-bottom:8px;">❌ 模糊规范（Vibe Coding 风格）</div>
+            <div class="code-block" style="font-size:12px;background:#2d1b1b;">
+<span style="color:#f87171;">做一个用户认证系统</span>
+            </div>
+            <div style="font-size:12px;color:#dc2626;margin-top:6px;">⚠ AI会自行发挥，无法与意图对齐</div>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:8px;">✅ 精确规范（SDD 风格）</div>
+            <div class="code-block" style="font-size:12px;">
+<span class="keyword">Node.js Express JWT 认证：</span>
+<span class="string">- bcrypt 加盐12轮哈希密码</span>
+<span class="string">- 刷新令牌7天 / 访问令牌15分钟</span>
+<span class="string">- 每IP 15分钟最多5次登录请求</span>
+<span class="string">- MongoDB 存储，Joi 输入验证</span>
+<span class="string">- 错误返回正确 HTTP 状态码</span>
+<span class="comment">- 日志不记录密码 / HTTP-only cookie</span>
+<span class="comment">- 包含单元测试 + JSON 请求示例</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ═══════════════════ S6 · 验证框架 ═══════════════════ -->
+  <div class="section" id="sec-verify">
+    <div class="section-header">
+      <div class="section-icon rose">🛡️</div>
+      <div>
+        <div class="section-title">五支柱验证框架</div>
+        <div class="section-sub">确保 AI 生成代码达到生产级标准的核心保障体系</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <div class="pillar" style="border-left-color:#ef4444;">
+          <div class="pillar-title">🔐 支柱一 · 安全验证</div>
+          <ul>
+            <li>SAST（静态应用安全测试）集成到 CI</li>
+            <li>依赖漏洞自动扫描（npm audit / pip audit）</li>
+            <li>硬编码密钥检测（如 git-secrets）</li>
+            <li>输入校验与清洗，防 SQL 注入 / XSS</li>
+          </ul>
+        </div>
+        <div class="pillar" style="border-left-color:#3b82f6;">
+          <div class="pillar-title">🧪 支柱二 · 测试要求</div>
+          <ul>
+            <li>强制最小单元测试覆盖率（建议 ≥ 80%）</li>
+            <li>API 集成测试 + 端到端测试</li>
+            <li>边界场景覆盖（spec.md 中定义的所有边界）</li>
+            <li>负载与性能测试</li>
+          </ul>
+        </div>
+        <div class="pillar" style="border-left-color:#10b981;">
+          <div class="pillar-title">📏 支柱三 · 代码质量标准</div>
+          <ul>
+            <li>强制 lint/format（ESLint / Black / Ruff）</li>
+            <li>圈复杂度测量，设置阈值告警</li>
+            <li>文档完整性 + 命名规范检查</li>
+            <li>架构模式一致性（对齐 CONSTITUTION.md）</li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <div class="pillar" style="border-left-color:#f59e0b;">
+          <div class="pillar-title">⚡ 支柱四 · 性能验证</div>
+          <ul>
+            <li>响应时间目标度量（spec 中已定义 SLA）</li>
+            <li>内存 / CPU 资源限制监控</li>
+            <li>数据库查询优化检查（慢查询告警）</li>
+            <li>缓存策略验证 + 负载测试基准</li>
+          </ul>
+        </div>
+        <div class="pillar" style="border-left-color:#8b5cf6;">
+          <div class="pillar-title">🚀 支柱五 · 上线就绪</div>
+          <ul>
+            <li>环境变量管理（零硬编码配置）</li>
+            <li>结构化日志 + 链路追踪（可观测性）</li>
+            <li>优雅降级 + 回滚方案</li>
+            <li>监控告警配置验证</li>
+          </ul>
+        </div>
+        <div class="callout info" style="margin-top:12px;">
+          <div class="callout-icon">⚖️</div>
+          <div class="callout-text">
+            <strong>评审准则</strong>
+            对 AI 生成代码与人类编写代码应用完全相同的质量标准。代码评审时，优先检查是否遵循了 spec.md 中的规范要求。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ═══════════════════ S7 · 避坑指南 ═══════════════════ -->
+  <div class="section" id="sec-pitfall">
+    <div class="section-header">
+      <div class="section-icon amber">⚠️</div>
+      <div>
+        <div class="section-title">避坑指南 · 常见误区</div>
+        <div class="section-sub">工程团队在落地 SDD 时最容易踩到的坑</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <div class="pitfall">
+          <div class="pitfall-icon">📄</div>
+          <div>
+            <div class="pitfall-title">把 README 当规范</div>
+            <div class="pitfall-desc">README 是给人看的散文，AI 无法从中稳定解析出可执行信息</div>
+            <div class="pitfall-fix">→ 使用结构化 DSL 或 Markdown Schema，必须有验收标准</div>
+          </div>
+        </div>
+        <div class="pitfall">
+          <div class="pitfall-icon">📝</div>
+          <div>
+            <div class="pitfall-title">规范写成散文叙述</div>
+            <div class="pitfall-desc">"支持用户登录" 这类叙述性表达缺乏可验证性，会导致AI自由发挥</div>
+            <div class="pitfall-fix">→ 统一使用 GIVEN/WHEN/THEN 格式描述行为，配合示例数据</div>
+          </div>
+        </div>
+        <div class="pitfall">
+          <div class="pitfall-icon">🔄</div>
+          <div>
+            <div class="pitfall-title">规范与代码不做漂移检测</div>
+            <div class="pitfall-desc">迭代后代码悄悄偏离规范，规范成为"历史文档"而非事实来源</div>
+            <div class="pitfall-fix">→ CI 集成漂移检测工具，每次 PR 自动对比规范与实现一致性</div>
+          </div>
+        </div>
+        <div class="pitfall">
+          <div class="pitfall-icon">📦</div>
+          <div>
+            <div class="pitfall-title">规范没有版本化策略</div>
+            <div class="pitfall-desc">规范文件未纳入 Git 管理，无法回溯历史、无法 Diff 变更</div>
+            <div class="pitfall-fix">→ 规范文件与代码在同一仓库同一 PR 中提交，联动版本化</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="pitfall">
+          <div class="pitfall-icon">🔍</div>
+          <div>
+            <div class="pitfall-title">过度细化规范</div>
+            <div class="pitfall-desc">把每行代码的实现细节都写进规范，维护成本极高，团队反感</div>
+            <div class="pitfall-fix">→ 规范描述"做什么"和"为什么"，不描述"怎么做"（那是 plan.md 的职责）</div>
+          </div>
+        </div>
+        <div class="pitfall">
+          <div class="pitfall-icon">🚀</div>
+          <div>
+            <div class="pitfall-title">一开始就全面推广</div>
+            <div class="pitfall-desc">跳过试点直接全团队推行，遇到阻力时容易全面失败</div>
+            <div class="pitfall-fix">→ 严格按"试点→扩展→推广"三阶段推进，先用1-2人小范围验证</div>
+          </div>
+        </div>
+        <div class="pitfall">
+          <div class="pitfall-icon">🤖</div>
+          <div>
+            <div class="pitfall-title">过度依赖AI生成的中间产物</div>
+            <div class="pitfall-desc">AI生成的 spec.md 直接进入 plan 阶段，没有人工审核校验</div>
+            <div class="pitfall-fix">→ 规范必须由团队成员审核确认后才能进入下一阶段，AI是助手不是决策者</div>
+          </div>
+        </div>
+        <div class="pitfall">
+          <div class="pitfall-icon">🏛️</div>
+          <div>
+            <div class="pitfall-title">没有建立项目宪法</div>
+            <div class="pitfall-desc">缺少 CONSTITUTION.md，每个人对架构原则理解不一，规范质量参差不齐</div>
+            <div class="pitfall-fix">→ 在第一个特性开始前，先建立 CONSTITUTION.md，定义核心约束与原则</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 适用/不适用场景 -->
+    <div class="card" style="margin-top:18px;">
+      <div class="card-title">🎯 SDD 适用场景快速判断</div>
+      <div class="grid-2">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#15803d;margin-bottom:10px;">✅ 强烈适合 SDD</div>
+          <ul style="padding-left:18px;font-size:13px;color:var(--text-muted);">
+            <li style="margin-bottom:6px;">多人协作的功能开发</li>
+            <li style="margin-bottom:6px;">生命周期长的核心业务系统</li>
+            <li style="margin-bottom:6px;">稳定性要求高（金融、医疗、基础设施）</li>
+            <li style="margin-bottom:6px;">AI 编码纳入主开发流程</li>
+            <li style="margin-bottom:6px;">需要频繁审计和合规的项目</li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#dc2626;margin-bottom:10px;">❌ 不建议强制用 SDD</div>
+          <ul style="padding-left:18px;font-size:13px;color:var(--text-muted);">
+            <li style="margin-bottom:6px;">快速原型验证（探索性开发）</li>
+            <li style="margin-bottom:6px;">一次性脚本或临时工具</li>
+            <li style="margin-bottom:6px;">3 行以内的 Bug Fix</li>
+            <li style="margin-bottom:6px;">纯个人项目且不涉及协作</li>
+            <li style="margin-bottom:6px;">极短生命周期的演示 Demo</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ═══════════════════ S8 · ROI ═══════════════════ -->
+  <div class="section" id="sec-roi">
+    <div class="section-header">
+      <div class="section-icon sky">📊</div>
+      <div>
+        <div class="section-title">ROI 参考数据</div>
+        <div class="section-sub">效率提升数据 · 时间线预期 · 与其他方法论的关系</div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:18px;">
+      <div class="card">
+        <div class="card-title">⏱️ 效率对比：构建实时聊天功能</div>
+        <table class="compare-table">
+          <thead><tr><th>传统方式</th><th>时间</th></tr></thead>
+          <tbody>
+            <tr><td>编写 PRD 文档</td><td>2-3 小时</td></tr>
+            <tr><td>创建设计文档</td><td>2-3 小时</td></tr>
+            <tr><td>编写技术规范</td><td>3-4 小时</td></tr>
+            <tr><td>编写测试计划</td><td>2 小时</td></tr>
+            <tr><td><strong>合计</strong></td><td><strong>~12 小时</strong></td></tr>
+          </tbody>
+        </table>
+        <table class="compare-table" style="margin-top:12px;">
+          <thead><tr><th>SDD 方式</th><th>时间</th></tr></thead>
+          <tbody>
+            <tr><td>/specify 生成 spec.md</td><td>~5 分钟</td></tr>
+            <tr><td>/plan 生成 plan.md</td><td>~5 分钟</td></tr>
+            <tr><td>/tasks 生成 tasks.md</td><td>~5 分钟</td></tr>
+            <tr><td><strong>合计</strong></td><td><strong>~15 分钟</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📈 ROI 时间线预期</div>
+        <div style="margin-bottom:14px;">
+          <div class="roi-bar">
+            <div class="roi-label"><span>第 1-3 月（净负期）</span><span>培训投入</span></div>
+            <div class="roi-track"><div class="roi-fill" style="width:100%;background:#ef4444;"></div></div>
+          </div>
+          <div class="roi-bar">
+            <div class="roi-label"><span>第 4-6 月（打平期）</span><span>小团队更快</span></div>
+            <div class="roi-track"><div class="roi-fill" style="width:70%;background:#f59e0b;"></div></div>
+          </div>
+          <div class="roi-bar">
+            <div class="roi-label"><span>第 7-12 月（净正期）</span><span>显著收益</span></div>
+            <div class="roi-track"><div class="roi-fill" style="width:55%;background:#10b981;"></div></div>
+          </div>
+          <div class="roi-bar">
+            <div class="roi-label"><span>第二年+（长期收益）</span><span>节省50-80%时间</span></div>
+            <div class="roi-track"><div class="roi-fill" style="width:20%;background:#8b5cf6;"></div></div>
+          </div>
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;font-size:13px;">
+          <div style="font-weight:700;color:#15803d;margin-bottom:6px;">行业基线数据</div>
+          <div style="color:#166534;">
+            ✦ 任务完成速度提升 <strong>55%</strong><br/>
+            ✦ 每周节省 <strong>2-3 小时</strong>（普通用户）<br/>
+            ✦ 高阶用户可达 <strong>6+ 小时/周</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 与其他方法论的关系 -->
+    <div class="card">
+      <div class="card-title">🔗 SDD 与其他开发方法论的关系</div>
+      <div class="callout info" style="margin-bottom:16px;">
+        <div class="callout-icon">🧩</div>
+        <div class="callout-text">
+          SDD 不是替代 TDD / BDD / DDD，而是在更高层次上整合它们，共同解决不同维度的"对齐"问题。
+        </div>
+      </div>
+      <table class="compare-table">
+        <thead>
+          <tr><th>方法论</th><th>核心保证</th><th>关注层次</th><th>与 SDD 的关系</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tag tag-blue">TDD</span></td>
+            <td>代码是对的</td>
+            <td>单元 / 函数级</td>
+            <td>SDD 的 tasks.md 强制 [T] 先于 [I]，天然包含 TDD</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-green">BDD</span></td>
+            <td>做的事情是对的</td>
+            <td>业务行为级</td>
+            <td>spec.md 的 GIVEN/WHEN/THEN 格式正是 BDD 验收标准</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-amber">DDD</span></td>
+            <td>领域概念是对的</td>
+            <td>领域模型级</td>
+            <td>plan.md 和 data-model.md 承载领域模型的设计决策</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-purple">SDD</span></td>
+            <td><strong>整个系统，从意图到实现，始终对齐</strong></td>
+            <td>全链路级</td>
+            <td>规范是唯一事实来源，统一所有层次的对齐</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ SUMMARY ═══════════════════ -->
+  <div class="card" style="background:linear-gradient(135deg,#0f172a,#1e3a5f);color:#fff;border:none;text-align:center;padding:40px;">
+    <div style="font-size:28px;font-weight:800;margin-bottom:12px;">先对齐，再构建</div>
+    <div style="font-size:16px;color:#94a3b8;max-width:600px;margin:0 auto 24px;">
+      Agree Before You Build — 在 AI 能将高质量规范直接转化为可工作代码的今天，一份清晰精确的规范，是从"随兴编码"迈向"可预测工程"的关键一步。
+    </div>
+    <div style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;">
+      <div class="principle-chip" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#e2e8f0;">📐 规范是第一性产物</div>
+      <div class="principle-chip" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#e2e8f0;">🔒 代码服务于规范</div>
+      <div class="principle-chip" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#e2e8f0;">🔄 规范随系统持续演进</div>
+      <div class="principle-chip" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#e2e8f0;">✅ 意图→实现，始终对齐</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  SDD 规范驱动开发工程实践指南 · 整理自 John's Blog / 腾讯云开发者社区 / InfoQ / GitHub Spec-kit 文档 · 2026
+</div>
+
+<script>
+  function scrollTo(id) {
+    document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+  }
+</script>
+</body>
+</html>

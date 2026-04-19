@@ -1,0 +1,26 @@
+{
+  "site": {
+    "title": "研究工作台",
+    "subtitle": "AI & 工程实践 · 知识沉淀",
+    "author": "AI Research",
+    "githubRepo": "your-username/your-repo"
+  },
+  "categories": [
+    { "id": "ai-research", "name": "AI研究", "icon": "🤖", "color": "#8B5CF6" },
+    { "id": "financial", "name": "金融数据", "icon": "📈", "color": "#10B981" },
+    { "id": "engineering", "name": "工程实践", "icon": "⚙️", "color": "#3B82F6" },
+    { "id": "reports", "name": "分析报告", "icon": "📊", "color": "#F59E0B" },
+    { "id": "other", "name": "其他", "icon": "📚", "color": "#6B7280" }
+  ],
+  "entries": [
+    {
+      "id": "sdd-engineering-guide",
+      "title": "SDD规范驱动开发工程实践指南",
+      "category": "engineering",
+      "date": "2026-04-19",
+      "description": "完整的SDD范式深度研究，涵盖核心理念、工程流程、24周落地路线图、五支柱验证框架",
+      "file": "articles/sdd-engineering-guide.html",
+      "tags": ["SDD", "规范驱动", "工程实践", "AI"]
+    }
+  ]
+}
