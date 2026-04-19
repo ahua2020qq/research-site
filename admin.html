@@ -261,7 +261,6 @@
     }
     .toast.show { transform: translateY(0); opacity: 1; }
     .toast.error { background: var(--accent-red); }
-    .data-actions { display: flex; gap: 12px; margin-top: 16px; }
     .btn-small {
       padding: 8px 16px;
       font-size: 13px;
@@ -274,14 +273,108 @@
       font-family: inherit;
     }
     .btn-small:hover { background: var(--accent-blue); color: white; }
+
+    /* ── Auth overlay ── */
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+    .auth-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 380px;
+      width: 90%;
+      text-align: center;
+    }
+    .auth-card h2 { font-size: 22px; margin-bottom: 8px; }
+    .auth-card p { color: var(--text-secondary); margin-bottom: 24px; font-size: 14px; }
+    .auth-card input {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 14px;
+      outline: none;
+      margin-bottom: 16px;
+      font-family: inherit;
+    }
+    .auth-card input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+    .auth-error { color: var(--accent-red); font-size: 13px; margin-bottom: 12px; min-height: 18px; }
+
+    /* ── Token section ── */
+    .token-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding: 14px 20px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+    .token-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      font-weight: 600;
+    }
+    .token-input {
+      flex: 1;
+      padding: 8px 12px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 13px;
+      outline: none;
+      font-family: monospace;
+    }
+    .token-input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+    .token-status { font-size: 11px; white-space: nowrap; }
+    .token-status.ok { color: var(--accent-green); }
+    .token-status.no { color: var(--accent-red); }
   </style>
 </head>
 <body>
-  <div class="container">
+  <!-- Password gate -->
+  <div id="authOverlay" class="auth-overlay">
+    <div class="auth-card">
+      <h2>🔐 管理验证</h2>
+      <p>请输入管理密码</p>
+      <div class="auth-error" id="authError"></div>
+      <input type="password" id="authPassword" placeholder="输入管理密码" autofocus>
+      <button class="btn btn-primary" onclick="login()" style="width:100%">进入管理</button>
+    </div>
+  </div>
+
+  <!-- Admin panel (hidden until authenticated) -->
+  <div id="adminPanel" class="container" style="display:none">
     <header class="header">
       <a href="index.html" class="back-link"><span>←</span><span>返回首页</span></a>
       <h1 class="header-title">📤 添加研究成果</h1>
     </header>
+
+    <div class="token-section">
+      <span class="token-label">🔑 GitHub Token:</span>
+      <input type="password" class="token-input" id="tokenInput" placeholder="ghp_xxxx...">
+      <button class="btn-small" onclick="saveToken()">保存</button>
+      <span class="token-status no" id="tokenStatus">未设置</span>
+    </div>
 
     <div class="form-card">
       <form id="entryForm">
@@ -329,19 +422,9 @@
         </div>
         <div class="submit-section">
           <button type="button" class="btn btn-secondary" id="resetBtn">重置</button>
-          <button type="submit" class="btn btn-primary" id="submitBtn">添加到 data.json</button>
+          <button type="submit" class="btn btn-primary" id="submitBtn">上传成果</button>
         </div>
       </form>
-    </div>
-
-    <div class="form-card">
-      <div class="form-section">
-        <label class="form-label">data.json 数据文件</label>
-        <p class="form-hint">点击下方按钮下载更新后的 data.json，然后替换 GitHub 仓库中的文件完成同步</p>
-        <div class="data-actions">
-          <button type="button" class="btn-small" id="downloadData">📥 下载 data.json</button>
-        </div>
-      </div>
     </div>
 
     <section class="entries-section">
@@ -355,14 +438,106 @@
   <div class="toast" id="toast"></div>
 
   <script>
+    // ===== 配置（修改密码在此） =====
+    const REPO = 'ahua2020qq/research-site';
+    const ADMIN_PASS = 'research2026';
+
+    // ===== 状态 =====
     let siteData = { categories: [], entries: [] };
     let selectedCategory = '';
     let selectedFile = null;
     let tags = [];
+    let githubToken = '';
 
+    // ===== GitHub API =====
+    async function ghApi(method, path, body) {
+      const opts = {
+        method,
+        headers: {
+          'Authorization': 'token ' + githubToken,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      };
+      if (body) {
+        opts.headers['Content-Type'] = 'application/json';
+        opts.body = JSON.stringify(body);
+      }
+      const res = await fetch('https://api.github.com/repos/' + REPO + '/contents/' + path, opts);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: 'HTTP ' + res.status }));
+        throw new Error(err.message || '请求失败');
+      }
+      return res.json().catch(() => null);
+    }
+
+    function toBase64(str) {
+      return btoa(unescape(encodeURIComponent(str)));
+    }
+
+    async function uploadToGithub(path, content, message) {
+      let sha = null;
+      try {
+        const existing = await ghApi('GET', path);
+        sha = existing.sha;
+      } catch (_) {}
+      const body = { message, content: toBase64(content) };
+      if (sha) body.sha = sha;
+      return ghApi('PUT', path, body);
+    }
+
+    async function deleteFromGithub(path, message) {
+      const file = await ghApi('GET', path);
+      return ghApi('DELETE', path, { message, sha: file.sha });
+    }
+
+    // ===== 认证 =====
+    function checkAuth() {
+      const saved = sessionStorage.getItem('admin_auth');
+      if (saved === ADMIN_PASS) {
+        showAdmin();
+      }
+      document.getElementById('authPassword').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') login();
+      });
+    }
+
+    function login() {
+      const pwd = document.getElementById('authPassword').value;
+      if (pwd === ADMIN_PASS) {
+        sessionStorage.setItem('admin_auth', pwd);
+        showAdmin();
+      } else {
+        document.getElementById('authError').textContent = '密码错误';
+        document.getElementById('authPassword').value = '';
+      }
+    }
+
+    function showAdmin() {
+      document.getElementById('authOverlay').style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'block';
+      githubToken = sessionStorage.getItem('gh_token') || '';
+      if (githubToken) {
+        document.getElementById('tokenInput').value = githubToken;
+        document.getElementById('tokenStatus').textContent = '已设置';
+        document.getElementById('tokenStatus').className = 'token-status ok';
+      }
+      loadData();
+    }
+
+    function saveToken() {
+      const token = document.getElementById('tokenInput').value.trim();
+      if (!token) { showToast('请输入 Token', true); return; }
+      githubToken = token;
+      sessionStorage.setItem('gh_token', token);
+      document.getElementById('tokenStatus').textContent = '已设置';
+      document.getElementById('tokenStatus').className = 'token-status ok';
+      showToast('Token 已保存');
+    }
+
+    // ===== 数据加载 =====
     async function loadData() {
       try {
-        const response = await fetch('data.json');
+        const response = await fetch('data.json?t=' + Date.now());
         siteData = await response.json();
         init();
       } catch (e) { showToast('加载数据失败：' + e.message, true); }
@@ -381,17 +556,15 @@
 
     function renderCategorySelect() {
       const container = document.getElementById('categorySelect');
-      container.innerHTML = siteData.categories.map(cat => `
-        <label class="category-option" data-value="${cat.id}">
-          <input type="radio" name="category" value="${cat.id}">
-          <span class="category-icon">${cat.icon}</span>
-          <span class="category-name">${cat.name}</span>
-        </label>
-      `).join('');
-
-      container.querySelectorAll('.category-option').forEach(opt => {
-        opt.addEventListener('click', () => {
-          container.querySelectorAll('.category-option').forEach(o => o.classList.remove('selected'));
+      container.innerHTML = siteData.categories.map(function(cat) {
+        return '<label class="category-option" data-value="' + cat.id + '">' +
+          '<input type="radio" name="category" value="' + cat.id + '">' +
+          '<span class="category-icon">' + cat.icon + '</span>' +
+          '<span class="category-name">' + cat.name + '</span></label>';
+      }).join('');
+      container.querySelectorAll('.category-option').forEach(function(opt) {
+        opt.addEventListener('click', function() {
+          container.querySelectorAll('.category-option').forEach(function(o) { o.classList.remove('selected'); });
           opt.classList.add('selected');
           selectedCategory = opt.dataset.value;
         });
@@ -399,70 +572,59 @@
     }
 
     function renderEntriesList() {
-      const list = document.getElementById('entriesList');
+      var list = document.getElementById('entriesList');
       if (siteData.entries.length === 0) {
         list.innerHTML = '<p style="color: var(--text-secondary); padding: 20px;">暂无成果，添加第一个吧！</p>';
         return;
       }
-      list.innerHTML = siteData.entries.map((entry, index) => {
-        const cat = siteData.categories.find(c => c.id === entry.category) || { icon: '📚', name: '其他' };
-        return `
-          <div class="entry-item">
-            <div class="entry-icon">${cat.icon}</div>
-            <div class="entry-info">
-              <div class="entry-title">${entry.title}</div>
-              <div class="entry-meta">
-                <span>📅 ${entry.date}</span>
-                <span>🏷️ ${cat.name}</span>
-              </div>
-            </div>
-            <div class="entry-actions">
-              <button class="btn-icon" onclick="deleteEntry(${index})" title="删除">🗑️</button>
-            </div>
-          </div>
-        `;
+      list.innerHTML = siteData.entries.map(function(entry, index) {
+        var cat = siteData.categories.find(function(c) { return c.id === entry.category; }) || { icon: '📚', name: '其他' };
+        return '<div class="entry-item">' +
+          '<div class="entry-icon">' + cat.icon + '</div>' +
+          '<div class="entry-info">' +
+            '<div class="entry-title">' + entry.title + '</div>' +
+            '<div class="entry-meta">' +
+              '<span>📅 ' + entry.date + '</span>' +
+              '<span>🏷️ ' + cat.name + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="entry-actions">' +
+            '<button class="btn-icon" onclick="deleteEntry(' + index + ')" title="删除">🗑️</button>' +
+          '</div>' +
+        '</div>';
       }).join('');
     }
 
-    function deleteEntry(index) {
-      if (confirm('确定要删除这个成果吗？')) {
-        siteData.entries.splice(index, 1);
-        saveData();
-        renderEntriesList();
-        showToast('已删除');
-      }
-    }
-
+    // ===== 表单交互 =====
     function setupEventListeners() {
-      const dropZone = document.getElementById('dropZone');
-      const fileInput = document.getElementById('fileInput');
+      var dropZone = document.getElementById('dropZone');
+      var fileInput = document.getElementById('fileInput');
 
-      dropZone.addEventListener('click', () => fileInput.click());
-      dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-      dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-      dropZone.addEventListener('drop', (e) => {
+      dropZone.addEventListener('click', function() { fileInput.click(); });
+      dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.classList.add('dragover'); });
+      dropZone.addEventListener('dragleave', function() { dropZone.classList.remove('dragover'); });
+      dropZone.addEventListener('drop', function(e) {
         e.preventDefault();
         dropZone.classList.remove('dragover');
-        const file = e.dataTransfer.files[0];
+        var file = e.dataTransfer.files[0];
         if (file && file.name.endsWith('.html')) handleFile(file);
         else showToast('请上传 HTML 文件', true);
       });
-      fileInput.addEventListener('change', (e) => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+      fileInput.addEventListener('change', function(e) { if (e.target.files[0]) handleFile(e.target.files[0]); });
       document.getElementById('removeFile').addEventListener('click', removeFile);
 
-      const tagsInput = document.getElementById('tagsInput');
-      const tagsWrapper = document.getElementById('tagsWrapper');
-      tagsWrapper.addEventListener('click', () => tagsInput.focus());
+      var tagsInput = document.getElementById('tagsInput');
+      var tagsWrapper = document.getElementById('tagsWrapper');
+      tagsWrapper.addEventListener('click', function() { tagsInput.focus(); });
 
       document.getElementById('entryForm').addEventListener('submit', handleSubmit);
       document.getElementById('resetBtn').addEventListener('click', resetForm);
-      document.getElementById('downloadData').addEventListener('click', downloadDataFile);
     }
 
     function handleFile(file) {
       selectedFile = file;
-      const dropZone = document.getElementById('dropZone');
-      const preview = document.getElementById('filePreview');
+      var dropZone = document.getElementById('dropZone');
+      var preview = document.getElementById('filePreview');
       dropZone.classList.add('has-file');
       dropZone.style.display = 'none';
       preview.style.display = 'flex';
@@ -472,9 +634,9 @@
 
     function removeFile() {
       selectedFile = null;
-      const dropZone = document.getElementById('dropZone');
-      const preview = document.getElementById('filePreview');
-      const fileInput = document.getElementById('fileInput');
+      var dropZone = document.getElementById('dropZone');
+      var preview = document.getElementById('filePreview');
+      var fileInput = document.getElementById('fileInput');
       dropZone.classList.remove('has-file');
       dropZone.style.display = 'block';
       preview.style.display = 'none';
@@ -482,42 +644,97 @@
     }
 
     function renderTags() {
-      const tagsWrapper = document.getElementById('tagsWrapper');
-      const chips = tags.map((tag, i) => `
-        <span class="tag-chip">${tag}<button onclick="removeTag(${i})">×</button></span>
-      `).join('');
+      var tagsWrapper = document.getElementById('tagsWrapper');
+      var chips = tags.map(function(tag, i) {
+        return '<span class="tag-chip">' + tag + '<button onclick="removeTag(' + i + ')">×</button></span>';
+      }).join('');
       tagsWrapper.innerHTML = chips + '<input type="text" class="tags-input" id="tagsInput" placeholder="输入标签后按回车">';
-      document.getElementById('tagsInput').focus();
-      document.getElementById('tagsInput').addEventListener('keydown', (e) => {
+      var input = document.getElementById('tagsInput');
+      input.focus();
+      input.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
           e.preventDefault();
-          const value = e.target.value.trim();
-          if (value && !tags.includes(value)) { tags.push(value); renderTags(); }
+          var value = e.target.value.trim();
+          if (value && tags.indexOf(value) === -1) { tags.push(value); renderTags(); }
         } else if (e.key === 'Backspace' && !e.target.value && tags.length > 0) { tags.pop(); renderTags(); }
       });
     }
 
     function removeTag(index) { tags.splice(index, 1); renderTags(); }
 
-    function handleSubmit(e) {
+    // ===== 核心操作：上传 =====
+    async function handleSubmit(e) {
       e.preventDefault();
+      if (!githubToken) { showToast('请先填写并保存 GitHub Token', true); return; }
       if (!selectedCategory) { showToast('请选择主题分类', true); return; }
       if (!selectedFile) { showToast('请上传 HTML 文件', true); return; }
-      const title = document.getElementById('title').value.trim();
-      const date = document.getElementById('date').value;
-      const description = document.getElementById('description').value.trim();
-      const id = title.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]/g, '-').replace(/-+/g, '-');
-      const newEntry = { id, title, category: selectedCategory, date, description, file: `articles/${selectedFile.name}`, tags };
-      siteData.entries.push(newEntry);
-      saveData();
-      renderEntriesList();
-      showToast('已添加到 data.json！记得下载并同步到 GitHub');
+
+      var submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = '上传中...';
+
+      try {
+        var title = document.getElementById('title').value.trim();
+        var date = document.getElementById('date').value;
+        var description = document.getElementById('description').value.trim();
+        var id = title.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]/g, '-').replace(/-+/g, '-');
+        var filePath = 'articles/' + selectedFile.name;
+
+        // 1. 读取 HTML 文件内容
+        var fileContent = await readFileText(selectedFile);
+
+        // 2. 上传 HTML 文件到 GitHub
+        await uploadToGithub(filePath, fileContent, '添加文章: ' + title);
+
+        // 3. 更新 data.json
+        var newEntry = { id: id, title: title, category: selectedCategory, date: date, description: description, file: filePath, tags: tags.slice() };
+        siteData.entries.push(newEntry);
+        await uploadToGithub('data.json', JSON.stringify(siteData, null, 2), '更新索引: 添加 ' + title);
+
+        showToast('上传成功！站点将在1-2分钟内更新');
+        resetForm();
+        renderEntriesList();
+      } catch (err) {
+        showToast('上传失败：' + err.message, true);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '上传成果';
+      }
     }
 
-    function saveData() {
-      localStorage.setItem('researchSiteData', JSON.stringify(siteData, null, 2));
+    function readFileText(file) {
+      return new Promise(function(resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = function() { resolve(reader.result); };
+        reader.onerror = reject;
+        reader.readAsText(file);
+      });
     }
 
+    // ===== 核心操作：删除 =====
+    async function deleteEntry(index) {
+      if (!githubToken) { showToast('请先填写并保存 GitHub Token', true); return; }
+      if (!confirm('确定要删除吗？此操作将从 GitHub 仓库中永久删除文件。')) return;
+
+      var entry = siteData.entries[index];
+      try {
+        // 尝试删除文章文件（失败不阻断，可能文件已不存在）
+        try {
+          await deleteFromGithub(entry.file, '删除文章: ' + entry.title);
+        } catch (_) {}
+
+        // 更新 data.json
+        siteData.entries.splice(index, 1);
+        await uploadToGithub('data.json', JSON.stringify(siteData, null, 2), '更新索引: 删除 ' + entry.title);
+
+        renderEntriesList();
+        showToast('已删除，站点将在1-2分钟内更新');
+      } catch (err) {
+        showToast('操作失败：' + err.message, true);
+      }
+    }
+
+    // ===== 工具 =====
     function resetForm() {
       document.getElementById('entryForm').reset();
       selectedCategory = '';
@@ -526,7 +743,7 @@
       setDefaultDate();
       removeFile();
       renderTags();
-      document.querySelectorAll('.category-option').forEach(o => o.classList.remove('selected'));
+      document.querySelectorAll('.category-option').forEach(function(o) { o.classList.remove('selected'); });
     }
 
     function formatFileSize(bytes) {
@@ -535,27 +752,16 @@
       return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     }
 
-    function downloadDataFile() {
-      const dataStr = JSON.stringify(siteData, null, 2);
-      const blob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'data.json';
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('data.json 已下载！');
-    }
-
-    function showToast(message, isError = false) {
-      const toast = document.getElementById('toast');
+    function showToast(message, isError) {
+      var toast = document.getElementById('toast');
       toast.textContent = message;
       toast.className = 'toast' + (isError ? ' error' : '');
       toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3000);
+      setTimeout(function() { toast.classList.remove('show'); }, 3000);
     }
 
-    loadData();
+    // ===== 启动 =====
+    checkAuth();
   </script>
 </body>
 </html>

@@ -342,14 +342,14 @@
 
   <!-- ───────────────── NAV ───────────────── -->
   <div class="nav-pills">
-    <button class="nav-pill active" onclick="scrollTo('sec-why')">① 为什么需要SDD</button>
-    <button class="nav-pill" onclick="scrollTo('sec-what')">② 核心理念</button>
-    <button class="nav-pill" onclick="scrollTo('sec-workflow')">③ 工作流与文档</button>
-    <button class="nav-pill" onclick="scrollTo('sec-tools')">④ 工具选型</button>
-    <button class="nav-pill" onclick="scrollTo('sec-practice')">⑤ 工程落地</button>
-    <button class="nav-pill" onclick="scrollTo('sec-verify')">⑥ 验证框架</button>
-    <button class="nav-pill" onclick="scrollTo('sec-pitfall')">⑦ 避坑指南</button>
-    <button class="nav-pill" onclick="scrollTo('sec-roi')">⑧ ROI参考</button>
+    <button class="nav-pill active" onclick="navTo(this,'sec-why')">① 为什么需要SDD</button>
+    <button class="nav-pill" onclick="navTo(this,'sec-what')">② 核心理念</button>
+    <button class="nav-pill" onclick="navTo(this,'sec-workflow')">③ 工作流与文档</button>
+    <button class="nav-pill" onclick="navTo(this,'sec-tools')">④ 工具选型</button>
+    <button class="nav-pill" onclick="navTo(this,'sec-practice')">⑤ 工程落地</button>
+    <button class="nav-pill" onclick="navTo(this,'sec-verify')">⑥ 验证框架</button>
+    <button class="nav-pill" onclick="navTo(this,'sec-pitfall')">⑦ 避坑指南</button>
+    <button class="nav-pill" onclick="navTo(this,'sec-roi')">⑧ ROI参考</button>
   </div>
 
   <!-- ═══════════════════ S1 · 为什么 ═══════════════════ -->
@@ -580,9 +580,9 @@
     <div class="card" style="margin-top:20px;">
       <div class="card-title">📄 三大核心文档详解</div>
       <div class="tabs">
-        <button class="tab active" onclick="switchTab('spec')">spec.md（做什么）</button>
-        <button class="tab" onclick="switchTab('plan')">plan.md（怎么做）</button>
-        <button class="tab" onclick="switchTab('tasks')">tasks.md（谁来做）</button>
+        <button class="tab active" onclick="switchTab(this,'spec')">spec.md（做什么）</button>
+        <button class="tab" onclick="switchTab(this,'plan')">plan.md（怎么做）</button>
+        <button class="tab" onclick="switchTab(this,'tasks')">tasks.md（谁来做）</button>
       </div>
 
       <div id="tab-spec" class="tab-pane active">
@@ -1323,16 +1323,16 @@
 </div>
 
 <script>
-  function scrollTo(id) {
+  function navTo(btn, id) {
     document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
     document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
-    event.target.classList.add('active');
+    btn.classList.add('active');
   }
 
-  function switchTab(name) {
+  function switchTab(btn, name) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-    event.target.classList.add('active');
+    btn.classList.add('active');
     document.getElementById('tab-' + name).classList.add('active');
   }
 </script>

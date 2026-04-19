@@ -3,7 +3,7 @@
     "title": "研究工作台",
     "subtitle": "AI & 工程实践 · 知识沉淀",
     "author": "AI Research",
-    "githubRepo": "your-username/your-repo"
+    "githubRepo": "ahua2020qq/research-site"
   },
   "categories": [
     { "id": "ai-research", "name": "AI研究", "icon": "🤖", "color": "#8B5CF6" },
