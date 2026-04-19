@@ -78,6 +78,15 @@
       "description": "银行系统开发场景下70个Subagent并行运行的全景统计，含Token消耗、工具调用、运行时长甘特图、散点图分析",
       "file": "articles/subagents_report.html",
       "tags": ["Subagents", "GLM", "多Agent", "性能分析", "可视化"]
+    },
+    {
+      "id": "subagents-deep-analysis",
+      "title": "深度解读：70 Agent 并行搭建银行系统 — 编排策略与效率分析",
+      "category": "reports",
+      "date": "2026-04-19",
+      "description": "基于70个Agent并行开发银行系统的真实运行数据，深度解读多Agent编排策略、Token经济学、并行效率与工程启示",
+      "file": "articles/subagents-deep-analysis.html",
+      "tags": ["多Agent", "编排策略", "Token分析", "工程启示", "银行系统"]
     }
   ]
 }
